@@ -1,0 +1,18 @@
+[package]
+name = "ape_bot_v2"
+version = "0.1.0"
+edition = "2021"
+authors = ["Eric (Skepz) <skepz.dev@gmail.com>"]
+
+[dependencies]
+better_term = "*"
+dotenv = "*"
+tokio = { version = "*", features = ["macros", "rt-multi-thread", "signal"]}
+rand = "*"
+lazy_static = "*"
+serde = "*"
+serde_json = "*"
+
+[dependencies.serenity]
+features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "client", "collector", "model"]
+version = "*"
