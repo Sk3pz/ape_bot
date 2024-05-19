@@ -10,7 +10,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
         .title(format!("{}'s Info", user.to_user(ctx).await.unwrap().global_name.unwrap()))
         .color(Colour::DARK_TEAL)
         .description("View your stats!")
-        .thumbnail("attachment://munger.png")
+        .thumbnail("attachment://george.png")
         .fields(
             vec![
                 ("Bananas:", format!("{}:banana:", userfile.get_bananas()), true),
@@ -34,7 +34,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
         .timestamp(Timestamp::now());
 
     let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
-        .add_file(CreateAttachment::path("./images/munger.png").await.unwrap())
+        .add_file(CreateAttachment::path("./images/george.png").await.unwrap())
         .embed(embed));
 
     if let Err(e) = command.create_response(&ctx.http, msg).await {

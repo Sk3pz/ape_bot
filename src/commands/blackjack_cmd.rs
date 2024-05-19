@@ -63,13 +63,13 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         let embed = CreateEmbed::new()
             .title(format!("Blackjack - {} Bananas for {}", amt, user.to_user(&ctx.http).await.unwrap().global_name.unwrap()))
             .thumbnail("attachment://monkey.png")
-            .description("Munger has dealt the cards")
+            .description("George has dealt the cards")
             .color(Colour::GOLD)
             .field(format!("Your Hand ({})", game.player.playing_hand().score()), format!("{}", game.player.playing_hand()), false)
-            .field("Munger's hand".to_string(), format!("{} ({})", game.dealer_card(),
+            .field("George's hand".to_string(), format!("{} ({})", game.dealer_card(),
                                                       game.dealer_card().display_no_suite()), false)
             .field("Would you like insurance?", "`yes` or `no`", false)
-            .footer(CreateEmbedFooter::new(format!("Munger Advice: {}", game.give_help())));
+            .footer(CreateEmbedFooter::new(format!("George Advice: {}", game.give_help())));
 
         let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
             .embed(embed)
@@ -89,13 +89,13 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
     let embed = CreateEmbed::new()
         .title(format!("Blackjack - {} Bananas for {}", amt, user.to_user(&ctx.http).await.unwrap().global_name.unwrap()))
         .thumbnail("attachment://monkey.png")
-        .description("Munger has dealt the cards")
+        .description("George has dealt the cards")
         .color(Colour::GOLD)
         .field(format!("Your Hand ({})", game.player.playing_hand().score()), format!("{}", game.player.playing_hand()), false)
-        .field("Munger's hand".to_string(), format!("{} ({})", game.dealer_card(),
+        .field("George's hand".to_string(), format!("{} ({})", game.dealer_card(),
                                                     game.dealer_card().display_no_suite()), false)
         .field("Options", format!("{}", game.give_options()), false)
-        .footer(CreateEmbedFooter::new(format!("Munger Advice: {}", game.give_help())));
+        .footer(CreateEmbedFooter::new(format!("George Advice: {}", game.give_help())));
 
     let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
                                                      .embed(embed)

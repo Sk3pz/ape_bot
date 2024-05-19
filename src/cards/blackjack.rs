@@ -343,10 +343,10 @@ impl BlackJack {
             .thumbnail("attachment://monkey.png")
             .color(Colour::GOLD)
             .field(format!("Your Hand ({})", playing_hand.score()), format!("{}", playing_hand), false)
-            .field("Munger's hand".to_string(), format!("{} ({})", self.dealer_card(),
+            .field("George's hand".to_string(), format!("{} ({})", self.dealer_card(),
                                                       self.dealer_card().display_no_suite()), false)
             .field("Options", format!("{}", self.give_options()), false)
-            .footer(CreateEmbedFooter::new(format!("Munger Advice: {}", self.give_help())))
+            .footer(CreateEmbedFooter::new(format!("George Advice: {}", self.give_help())))
     }
 
     pub fn end_embed(&self, msg: &Message, end_message: String, toast: String, user_values: &mut UserValues) -> CreateEmbed {
@@ -354,7 +354,7 @@ impl BlackJack {
             .title(format!("Blackjack ({}'s Game)", msg.author.global_name.clone().unwrap()))
             .description(end_message)
             .thumbnail("attachment://monkey.png")
-            .field(format!("Munger's hand ({})", self.dealer.score()), format!("{}", self.dealer), false)
+            .field(format!("George's hand ({})", self.dealer.score()), format!("{}", self.dealer), false)
             .field("Balance:", format!("{}:banana:", user_values.get_bananas()), false)
             .color(Colour::GOLD)
             .footer(CreateEmbedFooter::new(toast))
@@ -375,7 +375,7 @@ impl BlackJack {
                         false);
             }
             (self.end_embed(msg, "I forfeit.".to_string(),
-                            "Me Munger, me forfeit".to_string(), userfile), true)
+                            "Me George, me forfeit".to_string(), userfile), true)
         } else if self.player.playing_hand().is_bust() { // PLAYER BUST
             // add bananas to fed
             if self.next_player_hand() {
@@ -385,7 +385,7 @@ impl BlackJack {
             }
             (self.end_embed(msg,
                            format!("You bust with {}. Me win! Me eat good tonight!", old_score),
-                           "Me Munger the monkey, me win".to_string(), userfile), true)
+                           "Me George the monkey, me win".to_string(), userfile), true)
         } else if self.dealer.is_push(self.player.playing_hand()) { // PUSH
             userfile.add_bananas(self.player.bet);
             if self.next_player_hand() {
@@ -427,7 +427,7 @@ impl BlackJack {
             }
             (self.end_embed(msg,
                            format!("Me win with {}! You loose! Me eat good tonight!", self.dealer.score()),
-                           "Me Munger, me win".to_string(), userfile), true)
+                           "Me George, me win".to_string(), userfile), true)
         }
     }
 
@@ -460,13 +460,13 @@ impl BlackJack {
                         userfile.add_bananas(self.player.bet);
                         // reply with insurance payout
                         (self.end_embed(msg,
-                                        "Munger has blackjack! You get your nanners back.".to_string(),
+                                        "George has blackjack! You get your nanners back.".to_string(),
                                         "Give me nanners please!".to_string(), &mut userfile), true)
                     } else {
                         // player looses insurance
                         userfile.add_bananas(self.player.bet / 2); // add half of bet back
                         self.offered_insurance = false;
-                        (self.craft_embed(&msg.author.global_name.clone().unwrap(), "Munger does not have blackjack. You loose half your bet".to_string()), false)
+                        (self.craft_embed(&msg.author.global_name.clone().unwrap(), "George does not have blackjack. You loose half your bet".to_string()), false)
                     }
                 }
                 "no" => {
@@ -484,7 +484,7 @@ impl BlackJack {
                         }
                         // dealer has blackjack, end game
                         return (self.end_embed(msg,
-                                               "Munger has blackjack! You loose!".to_string(),
+                                               "George has blackjack! You loose!".to_string(),
                                                "Give me nanners please!".to_string(), &mut userfile), true);
                     }
                     // continue game
@@ -519,6 +519,7 @@ impl BlackJack {
                 }
 
                 self.player.split();
+                userfile.remove_bananas(self.player.bet);
                 self.hit();
 
                 (self.craft_embed(&msg.author.global_name.clone().unwrap(), "You split! Me for sure gonna win now!".to_string()), false)

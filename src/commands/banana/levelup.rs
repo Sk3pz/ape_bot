@@ -42,7 +42,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
     let embed = CreateEmbed::new()
         .title("Level Up!")
         .description(format!("Congratulations, {}!", user.to_user(ctx).await.unwrap().global_name.unwrap()))
-        .thumbnail("attachment://munger.png")
+        .thumbnail("attachment://george.png")
         .color(Colour::DARK_GOLD)
         .fields(
             vec![
@@ -66,7 +66,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
 
     let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
         .embed(embed)
-        .add_file(CreateAttachment::path("./images/munger.png").await.unwrap()));
+        .add_file(CreateAttachment::path("./images/george.png").await.unwrap()));
 
     if let Err(e) = command.create_response(&ctx.http, msg).await {
         nay!("Failed to respond to command: {}", e);

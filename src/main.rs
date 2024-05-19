@@ -11,7 +11,7 @@ use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction
                     Ready, ResumedEvent, Timestamp, UserId, VoiceState};
 use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
-use crate::commands::{banana, blackjack_cmd, help, slots};
+use crate::commands::{banana, blackjack_cmd, fiftyfifty, help, slots};
 use crate::cards::{GamesManager};
 
 pub mod logging;
@@ -32,7 +32,7 @@ lazy_static!(
     static ref SKEPZ_WIN_ALWAYS: AtomicBool = AtomicBool::new(false);
 );
 
-// the monkey's name is munger
+// the monkey's name is george
 
 // TODO: ideas for income
 //    these get reset every ascension
@@ -162,20 +162,20 @@ impl EventHandler for Handler {
                         .title("SUPER BOOST MODE")
                         .description(format!("x{} bananas on **ALL** gains!", SUPERBOOST))
                         .color(Colour::GOLD)
-                        .thumbnail("attachment://munger.png")
+                        .thumbnail("attachment://george.png")
                         .footer(CreateEmbedFooter::new("Brought to you by GigaApe Inc©"))
                 } else {
                     CreateEmbed::new()
                         .title("No more boost mode")
                         .description("Back to regular gains".to_string())
                         .color(Colour::GOLD)
-                        .thumbnail("attachment://munger.png")
+                        .thumbnail("attachment://george.png")
                         .footer(CreateEmbedFooter::new("Brought to you by GigaApe Inc©"))
                 };
 
                 let msg = CreateMessage::new()
                     .embed(embed)
-                    .add_file(CreateAttachment::path("./images/munger.png").await.unwrap());
+                    .add_file(CreateAttachment::path("./images/george.png").await.unwrap());
 
                 if let Err(e) = channel.send_message(&ctx.http, msg).await {
                     nay!("Failed to send message: {}", e);
@@ -261,8 +261,8 @@ impl EventHandler for Handler {
 
         let msg_content = msg.content.to_ascii_lowercase();
 
-        if msg_content == "hi munger" || msg_content == "hello munger" || msg_content == "hey munger" || msg_content == "hello, munger" {
-            let image_path = "./images/munger.png".to_string();
+        if msg_content == "hi george" || msg_content == "hello george" || msg_content == "hey george" || msg_content == "hello, george" {
+            let image_path = "./images/george.png".to_string();
             let reply = CreateMessage::new()
                 .content("Hello there!")
                 .add_file(CreateAttachment::path(image_path).await.unwrap())
@@ -286,7 +286,7 @@ impl EventHandler for Handler {
         }
 
         if msg_content.contains("odds") {
-            let image_path = "./images/munger.png".to_string();
+            let image_path = "./images/george.png".to_string();
             let reply = CreateMessage::new()
                 .content("You talk about odds? My games are fair, I swear!")
                 .add_file(CreateAttachment::path(image_path).await.unwrap())
@@ -327,6 +327,7 @@ impl EventHandler for Handler {
         register_command(&ctx, banana::pay::register()).await;
         register_command(&ctx, banana::ascend::register()).await;
         register_command(&ctx, slots::register()).await;
+        register_command(&ctx, fiftyfifty::register()).await;
 
         yay!("{} is connected!", ready.user.name);
         ctx.set_presence(Some(ActivityData::playing("with banana")), OnlineStatus::Online);
@@ -407,6 +408,9 @@ impl EventHandler for Handler {
                     "slots" => {
                         slots::run(command_options, &ctx, &command, &command.user.id).await;
                     }
+                    "fiftyfifty" => {
+                        fiftyfifty::run(&ctx, &command, &command.user.id).await;
+                    }
                     _ => {
                         command_response(&ctx, &command, "That do be a monkey brain moment").await;
                     }
@@ -430,7 +434,7 @@ async fn main() {
 |     {{  } -:- { } }     |
 |     {_{ }`===`{  _}     |
 |    ((((\)     (/))))    |
-|  Hi! My name is Munger  |"#;
+|  Hi! My name is George  |"#;
     println!("{}+-------{}APE BOT V-2{}-------+\n\
     {}{}\n\
     {}+-------------------------+", Color::White, Style::default().bold().fg(Color::Green),

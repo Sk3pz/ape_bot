@@ -173,7 +173,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
             .title(format!("Slots ({} for {}:banana:)", user.to_user(&ctx.http).await.unwrap().global_name.unwrap(), amt))
             .description(result)
             .color(Colour::GOLD)
-            .field("You Win!", format!("{} bananas!", winnings), false)
+            .field("You Win!", format!("You gain {}:banana:", winnings), false)
             .footer(CreateEmbedFooter::new("Me trustworthy. Odds good!"))
     } else {
         userfile.remove_bananas(amt);
@@ -181,7 +181,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
             .title(format!("Slots ({} for {}:banana:)", user.to_user(&ctx.http).await.unwrap().global_name.unwrap(), amt))
             .description(result)
             .color(Colour::GOLD)
-            .field("You Lost!", format!("{} bananas", amt), false)
+            .field("You Lost!", format!("You loose {}:banana:", amt), false)
             .footer(CreateEmbedFooter::new("Me trustworthy. your odds good! Play again!"))
     };
 
