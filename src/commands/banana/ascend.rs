@@ -34,7 +34,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
                 ("Bananas:", format!("{}:banana:", userfile.get_bananas()), true),
             ]
         )
-        .footer(CreateEmbedFooter::new("Brought to you by GigaApe Inc©"))
+        .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         .timestamp(Timestamp::now());
 
     let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()

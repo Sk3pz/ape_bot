@@ -16,6 +16,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
                 ("/levelup", "Buy level with banana", true),
                 ("/prestige", "Prestige at level 100", true),
                 ("/ascend", "Show you have no life at prestige 10", true),
+                ("/mine", "Work for bananas", true),
                 ("/pay", "Give banana", true),
 
                 ("/blackjack", "Gamble bananas in a game of blackjack", true),
@@ -23,7 +24,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
                 ("/slots", "You spin me right round", true),
             ]
         )
-        .footer(CreateEmbedFooter::new("Brought to you by GigaApe Inc©"));
+        .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"));
 
     // if the sender is an admin
     if let Some(member) = cmd.member.as_ref() {

@@ -11,7 +11,7 @@ use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction
                     Ready, ResumedEvent, Timestamp, UserId, VoiceState};
 use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
-use crate::commands::{admin, banana, blackjack_cmd, fiftyfifty, help, slots};
+use crate::commands::{admin, banana, blackjack_cmd, fiftyfifty, help, mine, slots};
 use crate::cards::{GamesManager};
 
 pub mod logging;
@@ -171,14 +171,14 @@ impl EventHandler for Handler {
                         .description(format!("x{} bananas on **ALL** gains!", SUPERBOOST))
                         .color(Colour::GOLD)
                         .thumbnail("attachment://george.png")
-                        .footer(CreateEmbedFooter::new("Brought to you by GigaApe Inc©"))
+                        .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
                 } else {
                     CreateEmbed::new()
                         .title("No more boost mode")
                         .description("Back to regular gains".to_string())
                         .color(Colour::GOLD)
                         .thumbnail("attachment://george.png")
-                        .footer(CreateEmbedFooter::new("Brought to you by GigaApe Inc©"))
+                        .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
                 };
 
                 let msg = CreateMessage::new()
@@ -337,6 +337,7 @@ impl EventHandler for Handler {
         register_command(&ctx, banana::ascend::register()).await;
         register_command(&ctx, slots::register()).await;
         register_command(&ctx, fiftyfifty::register()).await;
+        register_command(&ctx, mine::register()).await;
 
         register_command(&ctx, admin::register()).await;
 
@@ -397,27 +398,35 @@ impl EventHandler for Handler {
                 match command_name {
                     "help" => {
                         help::run(&ctx, &command).await;
+                        return;
                     }
                     "info" => {
                         banana::info::run(&ctx, &command, &sender.id).await;
+                        return;
                     }
                     "levelup" => {
                         banana::levelup::run(command_options, &ctx, &command, &sender.id).await;
+                        return;
                     }
                     "prestige" => {
                         banana::prestige::run(&ctx, &command, &sender.id).await;
+                        return;
                     }
                     "leaderboard" => {
                         banana::leaderboard::run(&ctx, &command).await;
+                        return;
                     }
                     "pay" => {
                         banana::pay::run(command_options, &ctx, &command, &sender.id).await;
+                        return;
                     }
                     "ascend" => {
                         banana::ascend::run(&ctx, &command, &sender.id).await;
+                        return;
                     }
                     "admin_channel" => {
                         admin::run(command_options, &ctx, &command, &sender.id, &guild_id).await;
+                        return;
                     }
                     _ => {}
                 }
@@ -433,6 +442,9 @@ impl EventHandler for Handler {
                         }
                         "fiftyfifty" => {
                             fiftyfifty::run(&ctx, &command, &sender.id).await;
+                        }
+                        "mine" => {
+                            mine::run(&ctx, &channel, &command, &sender.id).await;
                         }
                         _ => {
                             command_response(&ctx, &command, "That do be a monkey brain moment").await;

@@ -30,7 +30,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
                 ("Can Ascend:", format!("{}", if userfile.can_ascend() { "Yes!" } else { "No (prestige 10 + 1mil:banana:)" }), true),
             ]
         )
-        .footer(CreateEmbedFooter::new("Brought to you by GigaApe Inc©"))
+        .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         .timestamp(Timestamp::now());
 
     let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()

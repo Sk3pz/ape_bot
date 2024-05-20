@@ -238,5 +238,10 @@ impl UserValues {
         self.file.ascension += 1;
         self.update();
     }
+
+    pub fn has_super_drill(&mut self) -> bool {
+        self.reload();
+        self.file.inventory.super_drill
+    }
 }
 
