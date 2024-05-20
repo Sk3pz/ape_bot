@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serenity::all::UserId;
 use std::io::Write;
 use crate::{hey};
+use crate::inventory::Inventory;
 
 const BASE_PRICE: u64 = 150;
 const LEVEL_MULTIPLIER: u64 = 75;
@@ -16,6 +17,8 @@ pub struct UserFile {
     pub(crate) prestige: u16,
     pub(crate) bananas: u64,
     pub(crate) ascension: u16,
+
+    pub(crate) inventory: Inventory,
 }
 
 #[derive(Clone)]
@@ -26,7 +29,6 @@ pub struct UserValues {
 
 impl UserValues {
     fn new(id: &UserId) -> Self {
-        Self::generate(id);
         Self {
             id: id.clone(),
             file: UserFile {
@@ -34,6 +36,11 @@ impl UserValues {
                 prestige: 1,
                 bananas: 0,
                 ascension: 0,
+
+                inventory: Inventory {
+                    minions: Vec::new(),
+                    super_drill: false,
+                }
             }
         }
     }
@@ -47,10 +54,12 @@ impl UserValues {
         let path = Path::new(raw_path.as_str());
 
         if !path.exists() {
+            Self::generate(id);
             return UserValues::new(id);
         };
 
         let Ok(data) = fs::read_to_string(path) else {
+            Self::generate(id);
             return UserValues::new(id);
         };
 
@@ -81,9 +90,16 @@ impl UserValues {
             return;
         };
 
-        let default = "{\"level\":1,\"prestige\":1,\"ascension\":0,\"bananas\":0}".to_string();
+        let default_file = Self::new(id);
 
-        if let Err(e) = write!(file, "{}", default) {
+        let Ok(data) = serde_json::to_string(&default_file.file) else {
+            hey!("Failed to serialize user data: {}", id.clone());
+            return;
+        };
+
+        //let default = "{\"level\":1,\"prestige\":1,\"ascension\":0,\"bananas\":0}".to_string();
+
+        if let Err(e) = write!(file, "{}", data) {
             hey!("Failed to write to file for user {}: {}", id, e);
         }
     }

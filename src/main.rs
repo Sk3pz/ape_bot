@@ -11,13 +11,15 @@ use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction
                     Ready, ResumedEvent, Timestamp, UserId, VoiceState};
 use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
-use crate::commands::{banana, blackjack_cmd, fiftyfifty, help, slots};
+use crate::commands::{admin, banana, blackjack_cmd, fiftyfifty, help, slots};
 use crate::cards::{GamesManager};
 
 pub mod logging;
 pub mod userfile;
+pub mod guildfile;
 mod commands;
 pub mod cards;
+mod inventory;
 
 lazy_static!(
     static ref CRATE_ACTIVE: Mutex<AtomicBool> = Mutex::new(AtomicBool::new(false));
@@ -26,7 +28,8 @@ lazy_static!(
     static ref USERS_IN_VOICE: Mutex<Vec<(UserId, Timestamp)>> = Mutex::new(Vec::new());
 
     static ref GAMES: Mutex<GamesManager> = Mutex::new(GamesManager::new());
-    //static ref BLACKJACK_GAMES: Mutex<HashMap<UserId, BlackJack>> = Mutex::new(HashMap::new());
+
+    static ref MINING: Mutex<Vec<UserId>> = Mutex::new(Vec::new());
 
     static ref SUPERBOOST_MODE: AtomicBool = AtomicBool::new(false);
     static ref SKEPZ_WIN_ALWAYS: AtomicBool = AtomicBool::new(false);
@@ -34,15 +37,20 @@ lazy_static!(
 
 // the monkey's name is george
 
-// TODO: ideas for income
-//    these get reset every ascension
-//    nanner printer (expensive) produce nanners every x minutes but you have to collect them like minions
-//    nanner cloner - chance to clone every nanner you make (locked behind ascension 1)
+// TODO:
+//  - guild-based spam channel setting
+//  - income methods:
+//    * mine sludge
+//    * super sludge drill - gets sludge faster, costs 1mil bananas
+//    * minions (expensive) produce sludge every x minutes but you have to collect them
+//    * nanner cloner - chance to clone every nanner you make (locked behind ascension 1 and based on ascension level)
 
 const CODE_LENGTH: u8 = 6;
-const MSG_BANANA_GAIN_MIN: u64 = 10;
-const MSG_BANANA_GAIN_MAX: u64 = 50;
-const VOICE_MINUTE_BANANA_WORTH: u64 = 500;
+const MSG_BANANA_GAIN_MIN: u64 = 5;
+const MSG_BANANA_GAIN_MAX: u64 = 10;
+const VOICE_MINUTE_BANANA_WORTH: u64 = 100;
+
+pub const SLUDGE_BANANA_WORTH: u64 = 50; // produce 1-10 sludge by default per mining
 
 const SUPERBOOST: u64 = 2;
 
@@ -126,7 +134,7 @@ pub async fn middle_finger_image() -> String {
 }
 
 pub async fn command_response<S: Into<String>>(ctx: &Context, command: &CommandInteraction, msg: S) {
-    let data = CreateInteractionResponseMessage::new().content(msg.into());
+    let data = CreateInteractionResponseMessage::new().content(msg.into()).ephemeral(true);
     let builder = CreateInteractionResponse::Message(data);
     if let Err(err) = command.create_response(&ctx.http, builder).await {
         nay!("Failed to respond to command: {}", err)
@@ -261,7 +269,8 @@ impl EventHandler for Handler {
 
         let msg_content = msg.content.to_ascii_lowercase();
 
-        if msg_content == "hi george" || msg_content == "hello george" || msg_content == "hey george" || msg_content == "hello, george" {
+        if msg_content == "hi george" || msg_content == "hello george" || msg_content == "hey george" || msg_content == "hello, george"
+        || msg_content == "hi george!" || msg_content == "hello george!" || msg_content == "hey george!" || msg_content == "hello, george!" {
             let image_path = "./images/george.png".to_string();
             let reply = CreateMessage::new()
                 .content("Hello there!")
@@ -329,6 +338,8 @@ impl EventHandler for Handler {
         register_command(&ctx, slots::register()).await;
         register_command(&ctx, fiftyfifty::register()).await;
 
+        register_command(&ctx, admin::register()).await;
+
         yay!("{} is connected!", ready.user.name);
         ctx.set_presence(Some(ActivityData::playing("with banana")), OnlineStatus::Online);
     }
@@ -370,50 +381,72 @@ impl EventHandler for Handler {
         match interaction {
             Interaction::Command(command) => {
                 let command_name = command.data.name.as_str();
-                //let sender = &command.user;
+                let sender = &command.user;
                 let guild = command.guild_id;
                 if guild.is_none() {
                     command_response(&ctx, &command, "This command can only be used in a server").await;
                     return;
                 }
-                //let guild_id = guild.unwrap();
+                let guild_id = guild.unwrap();
                 let command_options = &command.data.options();
-                //let channel = command.channel_id;
+                let channel = command.channel_id;
 
+                let mut guild_settings = guildfile::GuildSettings::get(&guild_id);
+
+                // non-channel specific commands
                 match command_name {
                     "help" => {
                         help::run(&ctx, &command).await;
                     }
                     "info" => {
-                        banana::info::run(&ctx, &command, &command.user.id).await;
+                        banana::info::run(&ctx, &command, &sender.id).await;
                     }
                     "levelup" => {
-                        banana::levelup::run(command_options, &ctx, &command, &command.user.id).await;
+                        banana::levelup::run(command_options, &ctx, &command, &sender.id).await;
                     }
                     "prestige" => {
-                        banana::prestige::run(&ctx, &command, &command.user.id).await;
+                        banana::prestige::run(&ctx, &command, &sender.id).await;
                     }
                     "leaderboard" => {
                         banana::leaderboard::run(&ctx, &command).await;
                     }
-                    "blackjack" => {
-                        blackjack_cmd::run(command_options, &ctx, &command, &command.user.id).await;
-                    }
                     "pay" => {
-                        banana::pay::run(command_options, &ctx, &command, &command.user.id).await;
+                        banana::pay::run(command_options, &ctx, &command, &sender.id).await;
                     }
                     "ascend" => {
-                        banana::ascend::run(&ctx, &command, &command.user.id).await;
+                        banana::ascend::run(&ctx, &command, &sender.id).await;
                     }
-                    "slots" => {
-                        slots::run(command_options, &ctx, &command, &command.user.id).await;
+                    "admin_channel" => {
+                        admin::run(command_options, &ctx, &command, &sender.id, &guild_id).await;
                     }
-                    "fiftyfifty" => {
-                        fiftyfifty::run(&ctx, &command, &command.user.id).await;
+                    _ => {}
+                }
+
+                // spam commands that need checked
+                if guild_settings.is_allowed_channel(channel.get()) {
+                    match command_name {
+                        "blackjack" => {
+                            blackjack_cmd::run(command_options, &ctx, &command, &sender.id).await;
+                        }
+                        "slots" => {
+                            slots::run(command_options, &ctx, &command, &sender.id).await;
+                        }
+                        "fiftyfifty" => {
+                            fiftyfifty::run(&ctx, &command, &sender.id).await;
+                        }
+                        _ => {
+                            command_response(&ctx, &command, "That do be a monkey brain moment").await;
+                        }
                     }
-                    _ => {
-                        command_response(&ctx, &command, "That do be a monkey brain moment").await;
-                    }
+                } else {
+                    let allowed_channels = {
+                        let mut channels = Vec::new();
+                        for cid in guild_settings.get_channels() {
+                            channels.push(cid.to_channel(&ctx).await.unwrap().to_string());
+                        }
+                        channels
+                    };
+                    command_response(&ctx, &command, format!("That command is only allowed in the following channel(s): {}", allowed_channels.join(", "))).await;
                 }
             }
             _ => {}
