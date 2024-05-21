@@ -4,21 +4,17 @@ use std::sync::Mutex;
 use better_term::{Color, Style};
 use lazy_static::lazy_static;
 use rand::{Rng, thread_rng};
-use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction, Context,
-                    CreateAttachment, CreateCommand, CreateEmbed, CreateEmbedFooter,
-                    CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage,
-                    GatewayIntents, Interaction, Member, Message, OnlineStatus, PartialGuild,
-                    Ready, ResumedEvent, Timestamp, UserId, VoiceState};
+use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction, Context, CreateAttachment, CreateCommand, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, GatewayIntents, Interaction, Member, Mentionable, Message, OnlineStatus, PartialGuild, Ready, ResumedEvent, Timestamp, UserId, VoiceState};
 use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
 use crate::commands::{admin, banana, blackjack_cmd, fiftyfifty, help, mine, slots};
-use crate::cards::{GamesManager};
+use crate::games::{GamesManager};
 
 pub mod logging;
 pub mod userfile;
 pub mod guildfile;
 mod commands;
-pub mod cards;
+pub mod games;
 mod inventory;
 
 lazy_static!(
@@ -35,22 +31,12 @@ lazy_static!(
     static ref SKEPZ_WIN_ALWAYS: AtomicBool = AtomicBool::new(false);
 );
 
-// the monkey's name is george
-
-// TODO:
-//  - guild-based spam channel setting
-//  - income methods:
-//    * mine sludge
-//    * super sludge drill - gets sludge faster, costs 1mil bananas
-//    * minions (expensive) produce sludge every x minutes but you have to collect them
-//    * nanner cloner - chance to clone every nanner you make (locked behind ascension 1 and based on ascension level)
-
 const CODE_LENGTH: u8 = 6;
 const MSG_BANANA_GAIN_MIN: u64 = 5;
-const MSG_BANANA_GAIN_MAX: u64 = 10;
-const VOICE_MINUTE_BANANA_WORTH: u64 = 100;
+const MSG_BANANA_GAIN_MAX: u64 = 25;
+const VOICE_MINUTE_BANANA_WORTH: u64 = 250;
 
-pub const SLUDGE_BANANA_WORTH: u64 = 50; // produce 1-10 sludge by default per mining
+pub const SLUDGE_BANANA_WORTH: u64 = 250; // produce 1-10 sludge by default per mining
 
 const SUPERBOOST: u64 = 2;
 
@@ -196,41 +182,54 @@ impl EventHandler for Handler {
         }
 
         // handle if the user is in a game
-        let embd = {
-            //let mut lock = BLACKJACK_GAMES.lock().expect("Failed to get blackjack games lock");
+        let (embed, thumbnail_path) = {
             let mut lock = GAMES.lock().expect("Failed to get games lock");
             if let Some(code) = lock.get_player_game(&user.id) {
                 let game = lock.get_game(code).unwrap();
                 match game.game {
-                    cards::CardGame::BlackJack(ref mut bj) => {
+                    games::Games::BlackJack(ref mut bj) => {
                         let (embed, end) = bj.handle_message(&msg);
 
                         if end {
                             lock.end_game(code);
                         }
 
-                        Some(embed)
+                        (Some(embed), "./images/monkey.png".to_string())
                     }
-                    cards::CardGame::TexasHoldem(ref mut th) => {
+                    games::Games::SludgeMonsterBattle(ref mut battle) => {
+                        let (mut embed, end) = battle.handle_message(&msg);
+
+                        let thumbnail_path = battle.thumbnail.clone();
+
+                        embed = embed.thumbnail(format!("attachment://{}", thumbnail_path));
+
+                        if end {
+                            lock.end_game(code);
+                        }
+
+                        (Some(embed), format!("./images/sludge_monsters/{}", thumbnail_path))
+                    }
+                    games::Games::TexasHoldem(ref mut th) => {
                         let (embed, end) = th.handle_message(&msg);
 
                         if end {
                             lock.end_game(code);
                         }
 
-                        Some(embed)
+                        (Some(embed), "failed".to_string())
                     }
                 }
             } else {
-                None
+                (None, "".to_string())
             }
         };
 
-        if let Some(embed) = embd {
+        if let Some(embed) = embed {
             let builder = CreateMessage::new()
+                .content(format!("{}", user.mention()))
                 .embed(embed)
                 .reference_message(&msg)
-                .add_file(CreateAttachment::path("./images/monkey.png").await.unwrap());
+                .add_file(CreateAttachment::path(format!("{}", thumbnail_path)).await.unwrap());
 
             if let Err(e) = channel.send_message(&ctx.http, builder).await {
                 nay!("Failed to send message: {}", e);
@@ -444,7 +443,7 @@ impl EventHandler for Handler {
                             fiftyfifty::run(&ctx, &command, &sender.id).await;
                         }
                         "mine" => {
-                            mine::run(&ctx, &channel, &command, &sender.id).await;
+                            mine::run(&ctx, &channel, command.clone(), &sender.id).await;
                         }
                         _ => {
                             command_response(&ctx, &command, "That do be a monkey brain moment").await;

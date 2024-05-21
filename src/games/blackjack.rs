@@ -4,7 +4,7 @@ use std::sync::atomic::Ordering::SeqCst;
 use serenity::all::{Colour, CreateEmbed, Message};
 use serenity::builder::CreateEmbedFooter;
 use crate::{hey, SKEPZ_WIN_ALWAYS, SUPERBOOST, SUPERBOOST_MODE};
-use crate::cards::{Card, CardType, Deck, Suit};
+use crate::games::{Card, CardType, Deck, Suit};
 use crate::userfile::UserValues;
 
 fn is_10_value(card: &Card) -> bool {

@@ -2,11 +2,13 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use rand::random;
 use serenity::all::{UserId};
-use crate::cards::blackjack::BlackJack;
-use crate::cards::texas_holdem::TexasHoldem;
+use crate::games::blackjack::BlackJack;
+use crate::games::sludge_monster_battle::SludgeMonsterBattle;
+use crate::games::texas_holdem::TexasHoldem;
 
 pub mod blackjack;
-mod texas_holdem;
+pub mod texas_holdem;
+pub mod sludge_monster_battle;
 
 #[derive(Clone, Copy, Debug)]
 pub enum CardType {
@@ -393,20 +395,22 @@ impl Deck {
     }
 }
 
-pub enum CardGame {
+pub enum Games {
     BlackJack(BlackJack),
     TexasHoldem(TexasHoldem),
+
+    SludgeMonsterBattle(SludgeMonsterBattle),
 }
 
 pub struct GameHandler {
     // host can start the game, cancel the game, end the game, and skip a player?
     pub host: UserId,
     pub players: Vec<UserId>,
-    pub game: CardGame,
+    pub game: Games,
 }
 
 impl GameHandler {
-    pub fn new(host: UserId, game: CardGame) -> GameHandler {
+    pub fn new(host: UserId, game: Games) -> GameHandler {
         GameHandler { host, players: Vec::new(), game }
     }
 
@@ -471,6 +475,14 @@ impl GamesManager {
         None
     }
 
+    pub fn get_player_game_instance(&mut self, player: &UserId) -> Option<&mut GameHandler> {
+        let code = self.get_player_game(player);
+        match code {
+            Some(code) => self.get_game(code),
+            None => None,
+        }
+    }
+
     pub fn find_player_playing(&mut self, player: &UserId) -> Option<&mut GameHandler> {
         for game in self.games.values_mut() {
             if game.has_player(player) {
@@ -491,16 +503,16 @@ impl GamesManager {
     pub fn can_join(&self, game_code: &GameCode) -> bool {
         let game = self.games.get(game_code).unwrap();
         match &game.game {
-            CardGame::BlackJack(_) => false,
-            CardGame::TexasHoldem(th) => th.can_join(),
+            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) => false,
+            Games::TexasHoldem(th) => th.can_join(),
         }
     }
 
     pub fn get_hand(&self, game_code: &GameCode, player: UserId) -> Option<Vec<Card>> {
         let game = self.games.get(game_code).unwrap();
         match &game.game {
-            CardGame::BlackJack(_) => None,
-            CardGame::TexasHoldem(th) => th.get_hand(player),
+            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) => None,
+            Games::TexasHoldem(th) => th.get_hand(player),
         }
     }
 }

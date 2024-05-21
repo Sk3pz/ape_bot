@@ -1,7 +1,7 @@
 use rand::{thread_rng};
 use rand::prelude::SliceRandom;
 use serenity::all::{CreateEmbed, Message, UserId};
-use crate::cards::{Card, Deck};
+use crate::games::{Card, Deck};
 
 struct Player {
     user: UserId,

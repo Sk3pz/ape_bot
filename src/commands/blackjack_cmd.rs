@@ -1,7 +1,7 @@
 use serenity::all::{Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue, UserId};
-use crate::cards::blackjack::BlackJack;
+use crate::games::blackjack::BlackJack;
 use crate::{command_response, GAMES, nay};
-use crate::cards::{CardGame, GameHandler};
+use crate::games::{Games, GameHandler};
 use crate::userfile::UserValues;
 
 pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &CommandInteraction, user: &UserId) {
@@ -81,7 +81,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
             nay!("Failed to send bj message: {}", e);
         }
 
-        GAMES.lock().unwrap().insert(GameHandler::new(user.clone(), CardGame::BlackJack(game)));
+        GAMES.lock().unwrap().insert(GameHandler::new(user.clone(), Games::BlackJack(game)));
         return;
     }
 
@@ -107,7 +107,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         nay!("Failed to send bj message: {}", e);
     }
 
-    GAMES.lock().unwrap().insert(GameHandler::new(user.clone(), CardGame::BlackJack(game)));
+    GAMES.lock().unwrap().insert(GameHandler::new(user.clone(), Games::BlackJack(game)));
 }
 
 pub fn register() -> CreateCommand {
