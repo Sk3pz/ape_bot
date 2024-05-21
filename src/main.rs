@@ -34,7 +34,7 @@ lazy_static!(
 const CODE_LENGTH: u8 = 6;
 const MSG_BANANA_GAIN_MIN: u64 = 5;
 const MSG_BANANA_GAIN_MAX: u64 = 25;
-const VOICE_MINUTE_BANANA_WORTH: u64 = 250;
+const VOICE_MINUTE_BANANA_WORTH: u64 = 150;
 
 pub const SLUDGE_BANANA_WORTH: u64 = 250; // produce 1-10 sludge by default per mining
 

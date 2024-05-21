@@ -30,7 +30,7 @@ impl SludgeMonsterBattle {
 
     pub fn attack(&mut self) -> u32 {
         // calculate damage between 0 and 25 hp
-        let damage = thread_rng().gen_range(0..25);
+        let damage = thread_rng().gen_range(0..=25);
         if damage > self.boss_health {
             self.boss_health = 0;
             return damage;
@@ -46,7 +46,7 @@ impl SludgeMonsterBattle {
 
     pub fn boss_turn(&mut self) -> u32 {
         // calculate damage between 0 and 25 hp
-        let damage = thread_rng().gen_range(0..10);
+        let damage = thread_rng().gen_range(0..=10);
         if damage > self.player_health {
             self.player_health = 0;
             return damage;
@@ -108,7 +108,7 @@ impl SludgeMonsterBattle {
                         50
                     } else if self.initial_health == 300 {
                         25
-                    }  else {
+                    } else {
                         10
                     };
                     let reward_low = reward_high / 5;
