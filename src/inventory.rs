@@ -3,6 +3,7 @@ pub mod item;
 mod super_drill;
 
 use serde::{Deserialize, Serialize};
+use crate::inventory::super_drill::SuperDrill;
 
 #[derive(Serialize, Deserialize)]
 pub struct Inventory {
@@ -25,7 +26,7 @@ impl Inventory {
         minions
     }
 
-    pub fn get_super_drill(&self) -> Option<super_drill> {
+    pub fn get_super_drill(&self) -> Option<SuperDrill> {
         for item in self.items.iter() {
             if let item::InventoryItem::SuperDrill(super_drill) = item {
                 return Some(super_drill.clone());
