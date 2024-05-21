@@ -41,7 +41,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
             .title(format!("50/50 ({} for {}:banana:)", user.to_user(&ctx.http).await.unwrap().global_name.unwrap(), amt))
             .description("All your bananas are belong to me")
             .color(Colour::GOLD)
-            .field("You Lost!", format!("You loose {}:banana:", amt), false)
+            .field("You Lost!", format!("You lost {}:banana:", amt), false)
             .footer(CreateEmbedFooter::new("Me eat good tonight!"))
     };
 

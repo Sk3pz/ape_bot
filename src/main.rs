@@ -127,6 +127,14 @@ pub async fn command_response<S: Into<String>>(ctx: &Context, command: &CommandI
     }
 }
 
+pub async fn command_response_loud<S: Into<String>>(ctx: &Context, command: &CommandInteraction, msg: S) {
+    let data = CreateInteractionResponseMessage::new().content(msg.into());
+    let builder = CreateInteractionResponse::Message(data);
+    if let Err(err) = command.create_response(&ctx.http, builder).await {
+        nay!("Failed to respond to command: {}", err)
+    }
+}
+
 pub async fn register_command(ctx: &Context, cmd: CreateCommand) {
     if let Err(e) = Command::create_global_command(&ctx.http, cmd).await {
         nay!("Failed to register a command: {}", e);
@@ -183,44 +191,50 @@ impl EventHandler for Handler {
 
         // handle if the user is in a game
         let (embed, thumbnail_path) = {
-            let mut lock = GAMES.lock().expect("Failed to get games lock");
-            if let Some(code) = lock.get_player_game(&user.id) {
-                let game = lock.get_game(code).unwrap();
-                match game.game {
-                    games::Games::BlackJack(ref mut bj) => {
-                        let (embed, end) = bj.handle_message(&msg);
-
-                        if end {
-                            lock.end_game(code);
-                        }
-
-                        (Some(embed), "./images/monkey.png".to_string())
-                    }
-                    games::Games::SludgeMonsterBattle(ref mut battle) => {
-                        let (mut embed, end) = battle.handle_message(&msg);
-
-                        let thumbnail_path = battle.thumbnail.clone();
-
-                        embed = embed.thumbnail(format!("attachment://{}", thumbnail_path));
-
-                        if end {
-                            lock.end_game(code);
-                        }
-
-                        (Some(embed), format!("./images/sludge_monsters/{}", thumbnail_path))
-                    }
-                    games::Games::TexasHoldem(ref mut th) => {
-                        let (embed, end) = th.handle_message(&msg);
-
-                        if end {
-                            lock.end_game(code);
-                        }
-
-                        (Some(embed), "failed".to_string())
-                    }
-                }
+            // ensure the channel is a spam channel
+            let mut guild_file = guildfile::GuildSettings::get(&msg.guild_id.unwrap());
+            if !guild_file.is_allowed_channel(channel.get()) {
+                (None, String::new())
             } else {
-                (None, "".to_string())
+                let mut lock = GAMES.lock().expect("Failed to get games lock");
+                if let Some(code) = lock.get_player_game(&user.id) {
+                    let game = lock.get_game(code).unwrap();
+                    match game.game {
+                        games::Games::BlackJack(ref mut bj) => {
+                            let (embed, end) = bj.handle_message(&msg);
+
+                            if end {
+                                lock.end_game(code);
+                            }
+
+                            (Some(embed), "./images/monkey.png".to_string())
+                        }
+                        games::Games::SludgeMonsterBattle(ref mut battle) => {
+                            let (mut embed, end) = battle.handle_message(&msg);
+
+                            let thumbnail_path = battle.thumbnail.clone();
+
+                            embed = embed.thumbnail(format!("attachment://{}", thumbnail_path));
+
+                            if end {
+                                lock.end_game(code);
+                            }
+
+                            (Some(embed), format!("./images/sludge_monsters/{}", thumbnail_path))
+                        }
+                        games::Games::TexasHoldem(ref mut th) => {
+                            let (embed, end) = th.handle_message(&msg);
+
+                            if end {
+                                lock.end_game(code);
+                            }
+
+                            (Some(embed), "failed".to_string())
+                        }
+                    }
+                } else {
+                    (None, "".to_string())
+                }
             }
         };
 
@@ -319,7 +333,7 @@ impl EventHandler for Handler {
         }
 
         // crate check
-        if thread_rng().gen_range(0..400) == 0 {
+        if thread_rng().gen_range(0..100) == 0 {
             spawn_crate(&ctx, &channel).await;
         }
     }

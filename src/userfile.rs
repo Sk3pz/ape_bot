@@ -38,8 +38,7 @@ impl UserValues {
                 ascension: 0,
 
                 inventory: Inventory {
-                    minions: Vec::new(),
-                    super_drill: false,
+                    items: Vec::new(),
                 }
             }
         }
@@ -241,7 +240,7 @@ impl UserValues {
 
     pub fn has_super_drill(&mut self) -> bool {
         self.reload();
-        self.file.inventory.super_drill
+        self.file.inventory.get_super_drill().is_some()
     }
 }
 

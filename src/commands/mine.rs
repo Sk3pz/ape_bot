@@ -122,14 +122,16 @@ pub async fn run(ctx: &Context, channel: &ChannelId, command: CommandInteraction
 
     let mut in_game = false;
     // if the user is battling a sludge monster
-    if let Some(game) = GAMES.lock().unwrap().get_player_game_instance(sender) {
-        if let Games::SludgeMonsterBattle(_) = game.game {
-            in_game = true;
-        }
+    if let Some(_game) = GAMES.lock().unwrap().get_player_game_instance(sender) {
+        // if let Games::SludgeMonsterBattle(_) = game.game {
+        //     in_game = true;
+        // }
+        in_game = true;
     }
 
     if in_game {
-        command_response(ctx, &command, "You are currently battling a sludge monster!").await;
+        //command_response(ctx, &command, "You are currently battling a sludge monster!").await;
+        command_response(ctx, &command, "Finish your current game first!").await;
         return;
     }
 

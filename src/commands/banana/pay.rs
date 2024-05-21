@@ -1,6 +1,6 @@
 use serenity::all::{CommandInteraction, CommandOptionType, Context, CreateCommand, ResolvedOption, ResolvedValue, UserId};
 use serenity::builder::CreateCommandOption;
-use crate::command_response;
+use crate::{command_response, command_response_loud};
 use crate::userfile::UserValues;
 
 pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &CommandInteraction, user: &UserId) {
@@ -35,7 +35,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
     targetfile.add_bananas(amt);
 
     // success message
-    command_response(ctx, command, format!("You paid {} bananas to <@{}>", amt, target.id)).await;
+    command_response_loud(ctx, command, format!("You paid {} bananas to <@{}>", amt, target.id)).await;
 }
 
 pub fn register() -> CreateCommand {

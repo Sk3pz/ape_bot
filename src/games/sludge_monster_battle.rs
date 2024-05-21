@@ -99,6 +99,15 @@ impl SludgeMonsterBattle {
             "attack" => {
                 let attack = self.attack();
 
+                /*
+                    SLUDGE Monster REWARDS:
+                    500 HP: 20,000 - 100,000
+                    400 HP: 15,000 - 75,000
+                    300 HP: 10,000 - 50,000
+                    200 HP: 5,000 - 25,000
+                    100 HP: 2,000 - 10,000
+                */
+
                 if self.boss_health == 0 {
                     let reward_high = if self.initial_health == 500 {
                         100
@@ -106,7 +115,7 @@ impl SludgeMonsterBattle {
                         75
                     } else if self.initial_health == 300 {
                         50
-                    } else if self.initial_health == 300 {
+                    } else if self.initial_health == 200 {
                         25
                     } else {
                         10
