@@ -9,6 +9,8 @@ use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
 use crate::commands::{admin, banana, blackjack_cmd, fiftyfifty, help, mine, slots};
 use crate::games::{GamesManager};
+use crate::inventory::{item, super_drill};
+use crate::inventory::item::InventoryItem::SuperDrill;
 
 pub mod logging;
 pub mod userfile;
@@ -185,7 +187,18 @@ impl EventHandler for Handler {
                 return;
             }
             if msg.content == "ez" {
-                SKEPZ_WIN_ALWAYS.store(!SKEPZ_WIN_ALWAYS.load(Ordering::SeqCst), Ordering::SeqCst)
+                SKEPZ_WIN_ALWAYS.store(!SKEPZ_WIN_ALWAYS.load(Ordering::SeqCst), Ordering::SeqCst);
+                return;
+            }
+            if msg.content.starts_with("gsd") {
+                let recipient = msg.mentions.get(0);
+                if recipient.is_none() {
+                    return;
+                }
+
+                let recipient = recipient.unwrap();
+                let mut recipient_file = userfile::UserValues::get(&recipient.id);
+                recipient_file.add_super_drill();
             }
         }
 

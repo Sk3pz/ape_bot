@@ -1,6 +1,6 @@
 pub mod minion;
 pub mod item;
-mod super_drill;
+pub mod super_drill;
 
 use serde::{Deserialize, Serialize};
 use crate::inventory::super_drill::SuperDrill;

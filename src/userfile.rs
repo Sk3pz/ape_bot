@@ -6,6 +6,8 @@ use serenity::all::UserId;
 use std::io::Write;
 use crate::{hey};
 use crate::inventory::Inventory;
+use crate::inventory::item::InventoryItem;
+use crate::inventory::super_drill::SuperDrill;
 
 const BASE_PRICE: u64 = 150;
 const LEVEL_MULTIPLIER: u64 = 75;
@@ -241,6 +243,12 @@ impl UserValues {
     pub fn has_super_drill(&mut self) -> bool {
         self.reload();
         self.file.inventory.get_super_drill().is_some()
+    }
+
+    pub fn add_super_drill(&mut self) {
+        self.reload();
+        self.file.inventory.items.push(InventoryItem::SuperDrill(SuperDrill { tier: 1 }));
+        self.update();
     }
 }
 
