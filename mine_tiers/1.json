@@ -14,7 +14,7 @@
         "end": 10
       },
       "reward_scaling": true,
-      "thumbnail": "./sludge_monsters/small_sludge.jpeg",
+      "thumbnail": "small_sludge.jpeg",
       "drops": {
         "sludge": {
           "start": 8,
@@ -24,7 +24,7 @@
         "items": [
           {
             "HealingPotion": {
-              "health": 5
+              "health": 15
             }
           }
         ]
@@ -43,7 +43,7 @@
     "items": [
       {
         "HealingPotion": {
-          "health": 5
+          "health": 15
         }
       },
       {

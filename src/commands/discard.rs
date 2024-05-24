@@ -15,7 +15,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
         return;
     }
 
-    let item = *item as usize;
+    let item = *item as usize - 1;
 
     let mut user_file = UserValues::get(&cmd.user.id);
 

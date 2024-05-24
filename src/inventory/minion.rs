@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serenity::all::Timestamp;
 
-const MINION_SLUDE_HOURLY_PRODUCTION: u32 = 1;
-pub const MINION_BASE_MAX_SLUDGE: u32 = 100;
+const MINION_PRODUCTION: u32 = 1;
+pub const MINION_BASE_MAX_SLUDGE: u32 = 600;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Minion {
@@ -18,8 +18,8 @@ impl Minion {
         }
     }
 
-    pub fn hourly_sludge_production(&self) -> u32 {
-        MINION_SLUDE_HOURLY_PRODUCTION * self.level as u32
+    pub fn minute_sludge_production(&self) -> u32 {
+        MINION_PRODUCTION * self.level as u32
     }
 
     pub fn get_sludge_produced(&self) -> u32 {
@@ -27,9 +27,9 @@ impl Minion {
 
         let duration = now.signed_duration_since(self.mining_start.fixed_offset());
 
-        let hours = duration.num_hours();
+        let minutes = duration.num_minutes();
 
-        let produced = self.hourly_sludge_production() * hours as u32;
+        let produced = self.minute_sludge_production() * minutes as u32;
 
         if produced > MINION_BASE_MAX_SLUDGE {
             MINION_BASE_MAX_SLUDGE

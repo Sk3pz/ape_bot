@@ -14,7 +14,7 @@
         "end": 20
       },
       "reward_scaling": true,
-      "thumbnail": "./sludge_monsters/toxic_slime.jpeg",
+      "thumbnail": "toxic_slime.jpeg",
       "drops": {
         "sludge": {
           "start": 20,
@@ -34,7 +34,7 @@
             "SpellTome": {
               "name": "Toxic Wave",
               "damage": {
-                "start": 5,
+                "start": 10,
                 "end": 20
               }
             }
@@ -53,7 +53,7 @@
         "end": 20
       },
       "reward_scaling": true,
-      "thumbnail": "./sludge_monsters/sludge_wizard.png",
+      "thumbnail": "sludge_wizard.png",
       "drops": {
         "sludge": {
           "start": 20,
@@ -73,7 +73,7 @@
             "SpellTome": {
               "name": "Toxic Wave",
               "damage": {
-                "start": 5,
+                "start": 10,
                 "end": 20
               }
             }
@@ -92,7 +92,7 @@
         "end": 30
       },
       "reward_scaling": true,
-      "thumbnail": "./sludge_monsters/radioactive_ooze.jpeg",
+      "thumbnail": "radioactive_ooze.jpeg",
       "drops": {
         "sludge": {
           "start": 40,
@@ -112,8 +112,8 @@
             "SpellTome": {
               "name": "Irradiate",
               "damage": {
-                "start": 10,
-                "end": 50
+                "start": 20,
+                "end": 150
               }
             }
           }
@@ -133,15 +133,24 @@
     "items": [
       {
         "HealingPotion": {
-          "health": 15
+          "health": 50
         }
       },
       {
         "SpellTome": {
           "name": "Fireball",
           "damage": {
-            "start": 5,
-            "end": 50
+            "start": 25,
+            "end": 80
+          }
+        }
+      },
+      {
+        "SpellTome": {
+          "name": "Irradiate",
+          "damage": {
+            "start": 20,
+            "end": 150
           }
         }
       }

@@ -29,7 +29,7 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
         let embed = CreateEmbed::new()
             .title("CREATURE EVENT")
             .thumbnail(format!("attachment://{}", thumbnail))
-            .description("A sludge monster has appeared! You must defeat it to continue mining.")
+            .description(format!("A {} has appeared! You must defeat it to continue mining.", battle.enemy.name))
             .fields(
                 vec![
                     ("Creature Health", format!("{}", battle.enemy_health), true),
@@ -61,7 +61,6 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
     // super nanner chance
     let chance = thread_rng().gen_range(0..100);
     if current_tier.super_nanner_chance > chance {
-        hey!("Chance: {}/{}", current_tier.super_nanner_chance, chance);
         user_file.add_super_nanners(1);
         let embed = CreateEmbed::new()
             .title("SUPER NANNER EVENT")

@@ -1,6 +1,7 @@
-use serenity::all::{Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue};
+use serenity::all::{Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue, Timestamp};
 use crate::{command_response, nay};
 use crate::inventory::item::InventoryItem;
+use crate::inventory::minion::Minion;
 use crate::inventory::super_drill::SuperDrill;
 use crate::userfile::UserValues;
 
@@ -36,48 +37,43 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
             CreateEmbed::new()
                 .title("Purchase Successful")
                 .description("You have purchased the Super Pickaxe!")
+                .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
-                .field("Cost", "50:zap", true)
+                .field("Cost", "50:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
         2 => { // minion
-            if user_file.has_super_drill() {
-                command_response(ctx, &cmd, "You already own this item!").await;
-                return;
-            }
-            if user_file.get_super_nanners() < 10 {
+            if user_file.get_super_nanners() < 30 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
             }
-            user_file.add_item(InventoryItem::SuperDrill(SuperDrill { tier: 1 }));
-            user_file.remove_super_nanners(10);
+            user_file.add_item(InventoryItem::Minion(Minion { level: 1, mining_start: Timestamp::now() }));
+            user_file.remove_super_nanners(30);
 
             CreateEmbed::new()
                 .title("Purchase Successful")
                 .description("You have purchased a Minion!")
+                .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
-                .field("Cost", "10:zap", true)
+                .field("Cost", "10:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
         3 => { // healing potion
-            if user_file.has_super_drill() {
-                command_response(ctx, &cmd, "You already own this item!").await;
-                return;
-            }
             if user_file.get_super_nanners() < 2 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
             }
-            user_file.add_item(InventoryItem::HealingPotion { health: 5 });
+            user_file.add_item(InventoryItem::HealingPotion { health: 25 });
             user_file.remove_super_nanners(2);
 
             CreateEmbed::new()
                 .title("Purchase Successful")
                 .description("You have purchased a Healing Potion!")
+                .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
-                .field("Cost", "2:zap", true)
+                .field("Cost", "2:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }

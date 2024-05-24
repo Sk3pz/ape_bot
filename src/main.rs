@@ -117,10 +117,6 @@ pub async fn spawn_crate(ctx: &Context, channel: &ChannelId) {
     }
 }
 
-pub async fn middle_finger_image() -> String {
-    format!("./images/middle_finger{}.jpg", thread_rng().gen_range(1..=3))
-}
-
 pub async fn command_response<S: Into<String>>(ctx: &Context, command: &CommandInteraction, msg: S) {
     let data = CreateInteractionResponseMessage::new().content(msg.into()).ephemeral(true);
     let builder = CreateInteractionResponse::Message(data);
@@ -209,50 +205,58 @@ impl EventHandler for Handler {
             if !guild_file.is_allowed_channel(channel.get()) {
                 (None, None)
             } else {
-                let mut lock = GAMES.lock().expect("Failed to get games lock");
-                if let Some(code) = lock.get_player_game(&user.id) {
-                    let game = lock.get_game(code).unwrap();
-                    match game.game {
-                        games::Games::BlackJack(ref mut bj) => {
-                            let (embed, end) = bj.handle_message(&msg);
+                if !msg.content.is_empty() {
+                    let mut lock = GAMES.lock().expect("Failed to get games lock");
+                    if let Some(code) = lock.get_player_game(&user.id) {
+                        let game = lock.get_game(code).unwrap();
+                        match game.game {
+                            games::Games::BlackJack(ref mut bj) => {
+                                let (embed, end) = bj.handle_message(&msg);
 
-                            if end {
-                                lock.end_game(code);
+                                if end {
+                                    lock.end_game(code);
+                                }
+
+                                (Some(embed), Some("./images/monkey.png".to_string()))
                             }
+                            games::Games::SludgeMonsterBattle(ref mut battle) => {
+                                let (mut embed, end) = battle.handle_message(&msg);
 
-                            (Some(embed), Some("./images/monkey.png".to_string()))
-                        }
-                        games::Games::SludgeMonsterBattle(ref mut battle) => {
-                            let (mut embed, end) = battle.handle_message(&msg);
+                                let thumbnail_path = battle.thumbnail.clone();
 
-                            let thumbnail_path = battle.thumbnail.clone();
+                                embed = embed.thumbnail(format!("attachment://{}", thumbnail_path));
 
-                            embed = embed.thumbnail(format!("attachment://{}", thumbnail_path));
+                                if end {
+                                    lock.end_game(code);
+                                }
 
-                            if end {
-                                lock.end_game(code);
+                                (Some(embed), Some(format!("./images/sludge_monsters/{}", thumbnail_path)))
                             }
+                            games::Games::MineBattle(ref mut battle) => {
+                                let (mut embed, end) = battle.handle_message(&msg);
 
-                            (Some(embed), Some(format!("./images/sludge_monsters/{}", thumbnail_path)))
-                        }
-                        games::Games::MineBattle(ref mut battle) => {
-                            let (embed, end) = battle.handle_message(&msg);
+                                let thumbnail = battle.enemy.thumbnail.clone();
 
-                            if end {
-                                lock.end_game(code);
+                                embed = embed.thumbnail(format!("attachment://{}", thumbnail));
+
+                                if end {
+                                    lock.end_game(code);
+                                }
+
+                                (Some(embed), Some(format!("./images/sludge_monsters/{}", thumbnail)))
                             }
+                            games::Games::TexasHoldem(ref mut th) => {
+                                let (embed, end) = th.handle_message(&msg);
 
-                            (Some(embed), None)
-                        }
-                        games::Games::TexasHoldem(ref mut th) => {
-                            let (embed, end) = th.handle_message(&msg);
+                                if end {
+                                    lock.end_game(code);
+                                }
 
-                            if end {
-                                lock.end_game(code);
+                                (Some(embed), None)
                             }
-
-                            (Some(embed), None)
                         }
+                    } else {
+                        (None, None)
                     }
                 } else {
                     (None, None)

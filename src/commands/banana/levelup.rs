@@ -1,7 +1,7 @@
 use serenity::all::{Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue, UserId};
 use serenity::builder::CreateEmbedFooter;
 use serenity::model::Timestamp;
-use crate::{command_response, middle_finger_image, nay};
+use crate::{command_response, nay};
 use crate::userfile::UserValues;
 
 pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &CommandInteraction, user: &UserId) {
@@ -9,12 +9,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
 
     // check if the user has enough bananas
     if !userfile.can_levelup() {
-        let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
-            .content("No.")
-            .add_file(CreateAttachment::path(middle_finger_image().await).await.unwrap()));
-        if let Err(e) = command.create_response(&ctx.http, msg).await {
-            nay!("Failed to respond to command: {}", e);
-        }
+        command_response(ctx, command, "You don't have enough bananas to level up!").await;
         return;
     }
 

@@ -19,7 +19,8 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
             .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"));
 
         let builder = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
-            .embed(embed));
+            .embed(embed)
+            .ephemeral(true));
 
         if let Err(err) = cmd.create_response(&ctx.http, builder).await {
             nay!("Failed to respond to command: {}", err)
@@ -30,6 +31,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
     let mut items = Vec::new();
     for x in 0..inv.len() {
         let item = inv.get(x).unwrap();
+        let x = x + 1;
         match item {
             InventoryItem::Minion(m) => {
                 if m.is_full() {

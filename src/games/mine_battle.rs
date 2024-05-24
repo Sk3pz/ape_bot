@@ -79,7 +79,11 @@ impl MineBattle {
                     return (true, self.handle_win(user));
                 }
                 self.enemy_health -= damage;
-                (true, (self.craft_embed(format!("You used {} and dealt {} damage!", name, damage)), false))
+
+                let boss_attack = self.enemy_turn();
+
+                (true, (self.craft_embed(format!("You used {} and dealt {} damage! The {} attacked you for {} damage!",
+                                                 name, damage, self.enemy.name, boss_attack)), false))
             }
             _ => { (false, (self.craft_embed("You can not use that item here!".to_string()), false)) }
         }
@@ -89,6 +93,7 @@ impl MineBattle {
         // create an embed message for the battle
         CreateEmbed::new()
             .title(format!("{} Battle", self.enemy.name))
+            .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
             .description(message)
             .color(Colour::DARK_GREEN)
             .fields(
@@ -115,6 +120,7 @@ impl MineBattle {
                 user_file.add_bananas(reward as u64);
                 (CreateEmbed::new()
                      .title("Victory!")
+                     .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
                      .description(format!("You have defeated the {} and have been rewarded with some bananas!", self.enemy.name))
                      .field("Reward:", format!("{}:banana:", reward), false)
                      .color(Colour::DARK_GREEN)
@@ -126,6 +132,7 @@ impl MineBattle {
                 let item = self.enemy.drops.random_item();
                 if user_file.file.inventory.is_full() {
                     return (CreateEmbed::new()
+                                .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
                                 .title("Victory!")
                                 .description(format!("You have defeated the {} and have been rewarded with an item, but your inventory is full!", self.enemy.name))
                                 .field("Reward:", format!(":x: {}", item), false)
@@ -137,6 +144,7 @@ impl MineBattle {
                 user_file.add_item(item.clone());
                 (CreateEmbed::new()
                      .title("Victory!")
+                     .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
                      .description(format!("You have defeated the {} and have been rewarded with an item!", self.enemy.name))
                      .field("Reward:", format!("{}", item), false)
                      .color(Colour::DARK_GREEN)
@@ -149,6 +157,7 @@ impl MineBattle {
                 user_file.add_super_nanners(nanners);
                 (CreateEmbed::new()
                      .title("Victory!")
+                     .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
                      .description(format!("You have defeated the {} and have been rewarded with some super nanners!", self.enemy.name))
                      .field("Reward:", format!("{}:zap:", nanners), false)
                      .color(Colour::DARK_GREEN)
@@ -178,6 +187,7 @@ impl MineBattle {
         return (CreateEmbed::new()
                     .title("Defeat!")
                     .description(format!("The {} defeated you and has stolen some bananas!", self.enemy.name))
+                    .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
                     .field("Lost Bananas:", format!("{}:banana:", cost), false)
                     .color(Colour::RED)
                     .timestamp(Timestamp::now())
@@ -213,6 +223,8 @@ impl MineBattle {
                     return (self.craft_embed("**INVALID ITEM** To use an item, type `item #`, where # is the slot in your inventory (see `/inventory`)"
                         .to_string()), false)
                 };
+
+                let slot = slot - 1;
 
                 let mut user_file = UserValues::get(&msg.author.id);
 
