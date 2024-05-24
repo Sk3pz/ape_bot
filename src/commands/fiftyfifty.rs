@@ -1,8 +1,7 @@
-use std::cmp::PartialEq;
-use std::fmt::Display;
 use std::sync::atomic::Ordering::SeqCst;
 use rand::{Rng, thread_rng};
-use serenity::all::{CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue, UserId};
+use serenity::all::{CommandInteraction, Context, CreateCommand, CreateInteractionResponse,
+                    CreateInteractionResponseMessage, UserId};
 use serenity::builder::{CreateEmbed, CreateEmbedFooter};
 use serenity::model::Colour;
 use crate::{command_response, hey, SKEPZ_WIN_ALWAYS, SUPERBOOST, SUPERBOOST_MODE};

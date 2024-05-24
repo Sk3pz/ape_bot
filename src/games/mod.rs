@@ -3,12 +3,14 @@ use std::fmt::Display;
 use rand::random;
 use serenity::all::{UserId};
 use crate::games::blackjack::BlackJack;
+use crate::games::mine_battle::MineBattle;
 use crate::games::sludge_monster_battle::SludgeMonsterBattle;
 use crate::games::texas_holdem::TexasHoldem;
 
 pub mod blackjack;
 pub mod texas_holdem;
 pub mod sludge_monster_battle;
+pub mod mine_battle;
 
 #[derive(Clone, Copy, Debug)]
 pub enum CardType {
@@ -400,6 +402,7 @@ pub enum Games {
     TexasHoldem(TexasHoldem),
 
     SludgeMonsterBattle(SludgeMonsterBattle),
+    MineBattle(MineBattle),
 }
 
 pub struct GameHandler {
@@ -503,7 +506,7 @@ impl GamesManager {
     pub fn can_join(&self, game_code: &GameCode) -> bool {
         let game = self.games.get(game_code).unwrap();
         match &game.game {
-            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) => false,
+            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => false,
             Games::TexasHoldem(th) => th.can_join(),
         }
     }
@@ -511,7 +514,7 @@ impl GamesManager {
     pub fn get_hand(&self, game_code: &GameCode, player: UserId) -> Option<Vec<Card>> {
         let game = self.games.get(game_code).unwrap();
         match &game.game {
-            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) => None,
+            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => None,
             Games::TexasHoldem(th) => th.get_hand(player),
         }
     }

@@ -10,7 +10,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         return;
     };
 
-    let Some(ResolvedOption { value: ResolvedValue::Integer(amt), .. }) = options.last() else {
+    let Some(ResolvedOption { value: ResolvedValue::String(raw_amt), .. }) = options.last() else {
         // error message
         command_response(ctx, command, "Me confused, You must bet a number of bananas").await;
         return;
@@ -18,7 +18,24 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
 
     let mut userfile = UserValues::get(user);
 
-    let amt = *amt as u64;
+    // parse out `k` `m` and all
+    let raw_amt = raw_amt.to_lowercase();
+    let amt = if raw_amt == "all" {
+        userfile.get_bananas()
+    } else if raw_amt == "half" {
+        userfile.get_bananas() / 2
+    } else if raw_amt.ends_with("k") {
+        raw_amt[..raw_amt.len() - 1].parse::<u64>().unwrap_or(5) * 1000
+    } else if raw_amt.ends_with("m") {
+        raw_amt[..raw_amt.len() - 1].parse::<u64>().unwrap_or(5) * 1000000
+    } else {
+        let Ok(parse) = raw_amt.parse::<u64>() else {
+            // error message
+            command_response(ctx, command, "Me confused, You must bet a number of bananas").await;
+            return;
+        };
+        parse
+    };
 
     // check if the user has enough to pay
     if userfile.get_bananas() < amt {
@@ -43,7 +60,7 @@ pub fn register() -> CreateCommand {
         .description("Pay someone bananas")
         .add_option(CreateCommandOption::new(CommandOptionType::Mentionable, "target", "the user to pay")
             .required(true))
-        .add_option(CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount to pay the user")
+        .add_option(CreateCommandOption::new(CommandOptionType::String, "amount", "the amount to pay the user")
             .required(true))
         .dm_permission(false)
 }

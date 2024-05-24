@@ -1,0 +1,150 @@
+{
+  "required_super_drill_tier": 1,
+  "sludge_worth": 500,
+  "super_nanner_chance": 0.05,
+  "creatures": [
+    {
+      "name": "Toxic Slime",
+      "health": {
+        "start": 200,
+        "end": 800
+      },
+      "damage": {
+        "start": 5,
+        "end": 20
+      },
+      "reward_scaling": true,
+      "thumbnail": "./sludge_monsters/toxic_slime.jpeg",
+      "drops": {
+        "sludge": {
+          "start": 20,
+          "end": 60
+        },
+        "super_nanners": {
+          "start": 1,
+          "end": 2
+        },
+        "items": [
+          {
+            "HealingPotion": {
+              "health": 10
+            }
+          },
+          {
+            "SpellTome": {
+              "name": "Toxic Wave",
+              "damage": {
+                "start": 5,
+                "end": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sludge Wizard",
+      "health": {
+        "start": 500,
+        "end": 1000
+      },
+      "damage": {
+        "start": 5,
+        "end": 20
+      },
+      "reward_scaling": true,
+      "thumbnail": "./sludge_monsters/sludge_wizard.png",
+      "drops": {
+        "sludge": {
+          "start": 20,
+          "end": 60
+        },
+        "super_nanners": {
+          "start": 1,
+          "end": 2
+        },
+        "items": [
+          {
+            "HealingPotion": {
+              "health": 10
+            }
+          },
+          {
+            "SpellTome": {
+              "name": "Toxic Wave",
+              "damage": {
+                "start": 5,
+                "end": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Radioactive Ooze",
+      "health": {
+        "start": 300,
+        "end": 1200
+      },
+      "damage": {
+        "start": 10,
+        "end": 30
+      },
+      "reward_scaling": true,
+      "thumbnail": "./sludge_monsters/radioactive_ooze.jpeg",
+      "drops": {
+        "sludge": {
+          "start": 40,
+          "end": 80
+        },
+        "super_nanners": {
+          "start": 2,
+          "end": 3
+        },
+        "items": [
+          {
+            "HealingPotion": {
+              "health": 15
+            }
+          },
+          {
+            "SpellTome": {
+              "name": "Irradiate",
+              "damage": {
+                "start": 10,
+                "end": 50
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "drop_table": {
+    "sludge": {
+      "start": 10,
+      "end": 20
+    },
+    "super_nanners": {
+      "start": 1,
+      "end": 2
+    },
+    "items": [
+      {
+        "HealingPotion": {
+          "health": 15
+        }
+      },
+      {
+        "SpellTome": {
+          "name": "Fireball",
+          "damage": {
+            "start": 5,
+            "end": 50
+          }
+        }
+      }
+    ]
+  }
+}

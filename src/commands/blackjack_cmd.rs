@@ -59,6 +59,33 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
     let mut game = BlackJack::new(amt);
     game.deal();
 
+    if game.player_blackjack {
+        let embed = CreateEmbed::new()
+            .title(format!("Blackjack - {} Bananas for {}", amt, user.to_user(&ctx.http).await.unwrap().global_name.unwrap()))
+            .thumbnail("attachment://monkey.png")
+            .description("George has dealt the cards - **YOU GOT BLACKJACK!**")
+            .color(Colour::GOLD)
+            .field(format!("Your Hand ({})", game.player.playing_hand().score()), format!("{}", game.player.playing_hand()), false)
+            .field("George's hand".to_string(), format!("{} ({})", game.dealer_card(),
+                                                        game.dealer_card().display_no_suite()), false)
+            .field("You won!", "Go you!", false)
+            .footer(CreateEmbedFooter::new(format!("George Advice: {}", game.give_help())));
+
+        let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
+            .embed(embed)
+            .add_file(CreateAttachment::path("./images/monkey.png").await.unwrap()));
+
+        if let Err(e) = command.create_response(&ctx.http, msg).await {
+            // error message
+            command_response(ctx, command, "Failed to respond to command: {}").await;
+            nay!("Failed to send bj message: {}", e);
+        }
+        // add the bet back and 2.5 times
+        userfile.add_bananas(amt + (amt as f64 * 2.5) as u64);
+
+        return;
+    }
+
     if game.offered_insurance {
         let embed = CreateEmbed::new()
             .title(format!("Blackjack - {} Bananas for {}", amt, user.to_user(&ctx.http).await.unwrap().global_name.unwrap()))

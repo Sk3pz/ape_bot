@@ -12,12 +12,17 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
             vec![
                 ("/help", "Me show you commands", true),
                 ("/info", "View your stats", true),
+                ("/inventory", "View your inventory", true),
+                ("/discard", "Discard an item", true),
+                ("/shop", "View the shop", true),
+                ("/buy", "Buy an item from the shop", true),
                 ("/leaderboard", "See no-lifes", true),
                 ("/levelup", "Buy level with banana", true),
                 ("/prestige", "Prestige at level 100", true),
                 ("/ascend", "Show you have no life at prestige 10", true),
-                ("/mine", "Work for bananas", true),
+                ("/mine", "Work for bananas and more", true),
                 ("/pay", "Give banana", true),
+                ("/collect_minions", "Collect sludge mined by your minions", true),
 
                 ("/blackjack", "Gamble bananas in a game of blackjack", true),
                 ("/fiftyfifty", "Gamble bananas with a 50% chance", true),

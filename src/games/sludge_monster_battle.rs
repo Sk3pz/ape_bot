@@ -55,6 +55,14 @@ impl SludgeMonsterBattle {
         damage
     }
 
+    pub fn heal_player(&mut self, amt: u32) {
+        // heal the player for 25 hp
+        self.player_health += amt;
+        if self.player_health > 100 {
+            self.player_health = 100;
+        }
+    }
+
     pub fn craft_embed(&self, message: String) -> CreateEmbed {
         // create an embed message for the battle
         CreateEmbed::new()

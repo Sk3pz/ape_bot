@@ -5,15 +5,14 @@ pub mod super_drill;
 use serde::{Deserialize, Serialize};
 use crate::inventory::super_drill::SuperDrill;
 
+pub const MAX_INVENTORY_SIZE: u8 = 16;
+
 #[derive(Serialize, Deserialize)]
 pub struct Inventory {
     pub items: Vec<item::InventoryItem>,
 }
 
 impl Inventory {
-    pub fn is_empty(&self) -> bool {
-        self.items.is_empty()
-    }
 
     pub fn get_minions(&self) -> Vec<minion::Minion> {
         let mut minions = Vec::new();
@@ -34,6 +33,10 @@ impl Inventory {
         }
 
         None
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.items.len() >= MAX_INVENTORY_SIZE as usize
     }
 }
 

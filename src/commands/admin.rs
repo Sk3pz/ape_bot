@@ -1,8 +1,8 @@
-use serenity::all::{CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption, GuildId, Permissions, ResolvedOption, ResolvedValue, UserId};
+use serenity::all::{CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption, GuildId, Permissions, ResolvedOption, ResolvedValue};
 use crate::{command_response};
 use crate::guildfile::GuildSettings;
 
-pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &CommandInteraction, user: &UserId, guild: &GuildId) {
+pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &CommandInteraction, guild: &GuildId) {
     let Some(ResolvedOption { value: ResolvedValue::String(option), .. }) = options.first() else {
         // error message
         command_response(ctx, command, "Me confused, You must specify an option: `add`, `remove`").await;

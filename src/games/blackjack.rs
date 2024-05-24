@@ -1,10 +1,9 @@
 use std::fmt::Display;
-use std::sync::atomic::Ordering;
 use std::sync::atomic::Ordering::SeqCst;
 use serenity::all::{Colour, CreateEmbed, Message};
 use serenity::builder::CreateEmbedFooter;
-use crate::{hey, SKEPZ_WIN_ALWAYS, SUPERBOOST, SUPERBOOST_MODE};
-use crate::games::{Card, CardType, Deck, Suit};
+use crate::{SKEPZ_WIN_ALWAYS, SUPERBOOST, SUPERBOOST_MODE};
+use crate::games::{Card, CardType, Deck};
 use crate::userfile::UserValues;
 
 fn is_10_value(card: &Card) -> bool {
@@ -142,15 +141,9 @@ impl BlackjackPlayer {
     }
 
     pub fn split(&mut self) {
-        let hands_len = self.hands.len();
         let second_card = self.hands[self.playing_hand as usize].cards.pop().unwrap();
         self.hands.push(BlackjackHand::new());
         self.hands.last_mut().unwrap().add_card(second_card);
-        // let hand = self.hands.pop().unwrap();
-        // self.hands.push(BlackjackHand::new());
-        // self.hands.push(BlackjackHand::new());
-        // self.hands[0].add_card(hand.cards[0]);
-        // self.hands[1].add_card(hand.cards[1]);
     }
 
     pub fn double_down(&mut self, amt: u64) {
@@ -181,7 +174,7 @@ pub struct BlackJack {
     dealer: BlackjackHand,
     deck: Deck,
     pub offered_insurance: bool,
-    player_blackjack: bool,
+    pub player_blackjack: bool,
     turn: u64,
     original_bet: u64,
 }
@@ -212,7 +205,8 @@ impl BlackJack {
         self.dealer.add_card(self.deck.deal());
 
         // insurance check
-        self.offered_insurance = self.dealer_card().card_type == CardType::Ace || is_10_value(&self.dealer_card());
+        //self.offered_insurance = self.dealer_card().card_type == CardType::Ace || is_10_value(&self.dealer_card());
+        self.offered_insurance = self.dealer_card().card_type == CardType::Ace;
 
         // check for player blackjack
         self.player_blackjack = self.player.hands[0].is_blackjack();
@@ -364,7 +358,7 @@ impl BlackJack {
         let old_score = self.player.playing_hand().score();
         if msg.author.id.get() == 318884828508454912 && SKEPZ_WIN_ALWAYS.load(SeqCst) { // skepz wins
             let mut payout = self.player.bet * 2;
-            if SUPERBOOST_MODE.load(Ordering::SeqCst) {
+            if SUPERBOOST_MODE.load(SeqCst) {
                 payout *= SUPERBOOST;
             }
             userfile.add_bananas(payout);
@@ -400,13 +394,13 @@ impl BlackJack {
         } else if self.dealer.is_bust() || self.player.playing_hand().is_winning(&self.dealer) { // DEALER LOOSE
             if self.player_blackjack {
                 let mut payout = (self.player.bet as f32 * 2.5).round() as u64;
-                if SUPERBOOST_MODE.load(Ordering::SeqCst) {
+                if SUPERBOOST_MODE.load(SeqCst) {
                     payout *= SUPERBOOST;
                 }
                 userfile.add_bananas(payout);
             } else {
                 let mut payout = self.player.bet * 2;
-                if SUPERBOOST_MODE.load(Ordering::SeqCst) {
+                if SUPERBOOST_MODE.load(SeqCst) {
                     payout *= SUPERBOOST;
                 }
                 userfile.add_bananas(payout);
@@ -471,10 +465,9 @@ impl BlackJack {
                 }
                 "no" => {
                     if self.dealer.is_blackjack() {
-                        // todo: make this a chance of happening to all users
                         if msg.author.id.get() == 318884828508454912 && SKEPZ_WIN_ALWAYS.load(SeqCst) {
                             let mut payout = self.player.bet * 2;
-                            if SUPERBOOST_MODE.load(Ordering::SeqCst) {
+                            if SUPERBOOST_MODE.load(SeqCst) {
                                 payout *= SUPERBOOST;
                             }
                             userfile.add_bananas(payout);

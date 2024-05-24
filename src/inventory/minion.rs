@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use serenity::all::Timestamp;
 
 const MINION_SLUDE_HOURLY_PRODUCTION: u32 = 1;
-const MINION_BASE_MAX_SLUDGE: u32 = 100;
+pub const MINION_BASE_MAX_SLUDGE: u32 = 100;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Minion {
     pub level: u8,
     pub mining_start: Timestamp,

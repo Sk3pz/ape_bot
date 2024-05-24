@@ -2,11 +2,12 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::path::Path;
 use serde::{Deserialize, Serialize};
-use serenity::all::UserId;
+use serenity::all::{Timestamp, UserId};
 use std::io::Write;
-use crate::{hey};
+use crate::hey;
 use crate::inventory::Inventory;
 use crate::inventory::item::InventoryItem;
+use crate::inventory::minion::Minion;
 use crate::inventory::super_drill::SuperDrill;
 
 const BASE_PRICE: u64 = 150;
@@ -18,7 +19,9 @@ pub struct UserFile {
     pub(crate) level: u16,
     pub(crate) prestige: u16,
     pub(crate) bananas: u64,
+    pub(crate) super_nanners: u16,
     pub(crate) ascension: u16,
+    pub(crate) mine_tier: u8,
 
     pub(crate) inventory: Inventory,
 }
@@ -37,7 +40,9 @@ impl UserValues {
                 level: 1,
                 prestige: 1,
                 bananas: 0,
+                super_nanners: 0,
                 ascension: 0,
+                mine_tier: 0,
 
                 inventory: Inventory {
                     items: Vec::new(),
@@ -240,6 +245,63 @@ impl UserValues {
         self.update();
     }
 
+    pub fn get_mine_tier(&mut self) -> u8 {
+        self.reload();
+        self.file.mine_tier
+    }
+
+    pub fn set_mine_tier(&mut self, tier: u8) {
+        self.reload();
+        self.file.mine_tier = tier;
+        self.update();
+    }
+
+    pub fn add_super_nanners(&mut self, amt: u16) {
+        self.reload();
+        self.file.super_nanners += amt;
+        self.update();
+    }
+
+    pub fn get_super_nanners(&mut self) -> u16 {
+        self.reload();
+        self.file.super_nanners
+    }
+
+    pub fn remove_super_nanners(&mut self, amt: u16) {
+        self.reload();
+        self.file.super_nanners -= amt;
+        self.update();
+    }
+
+    pub fn add_inventory_item(&mut self, item: InventoryItem) {
+        self.reload();
+        self.file.inventory.items.push(item);
+        self.update();
+    }
+
+    pub fn get_items(&mut self) -> Vec<InventoryItem> {
+        self.reload();
+        self.file.inventory.items.clone()
+    }
+
+    pub fn add_item(&mut self, item: InventoryItem) {
+        self.reload();
+        self.file.inventory.items.push(item);
+        self.update();
+    }
+
+    pub fn remove_item(&mut self, item: InventoryItem) {
+        self.reload();
+        self.file.inventory.items.retain(|i| i != &item);
+        self.update();
+    }
+
+    pub fn remove_item_index(&mut self, index: usize) {
+        self.reload();
+        self.file.inventory.items.remove(index);
+        self.update();
+    }
+
     pub fn has_super_drill(&mut self) -> bool {
         self.reload();
         self.file.inventory.get_super_drill().is_some()
@@ -249,6 +311,35 @@ impl UserValues {
         self.reload();
         self.file.inventory.items.push(InventoryItem::SuperDrill(SuperDrill { tier: 1 }));
         self.update();
+    }
+
+    pub fn get_super_drill_tier(&mut self) -> u8 {
+        self.reload();
+        if !self.has_super_drill() {
+            0
+        } else {
+            self.file.inventory.get_super_drill().unwrap().tier
+        }
+    }
+
+    pub fn get_minions(&mut self) -> Vec<Minion> {
+        self.reload();
+        self.file.inventory.get_minions()
+    }
+
+    pub fn collect_minions(&mut self) -> u64 {
+        self.reload();
+        // loop through the minions and collect the sludge
+        let mut sludge: u64 = 0;
+        for minion in &mut self.file.inventory.items {
+            if let InventoryItem::Minion(ref mut minion) = minion {
+                sludge += minion.get_sludge_produced() as u64;
+                minion.mining_start = Timestamp::now();
+            }
+        }
+        // update the minions
+        self.update();
+        sludge
     }
 }
 

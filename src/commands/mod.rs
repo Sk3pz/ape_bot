@@ -5,3 +5,8 @@ pub mod slots;
 pub mod fiftyfifty;
 pub mod mine;
 pub mod admin;
+pub mod inventory_cmd;
+pub mod shop;
+pub mod buy;
+pub mod discard;
+pub(crate) mod collect_minions;

@@ -1,0 +1,60 @@
+{
+  "required_super_drill_tier": 0,
+  "sludge_worth": 250,
+  "super_nanner_chance": 0.02,
+  "creatures": [
+    {
+      "name": "Sludge Monster",
+      "health": {
+        "start": 100,
+        "end": 500
+      },
+      "damage": {
+        "start": 0,
+        "end": 10
+      },
+      "reward_scaling": true,
+      "thumbnail": "./sludge_monsters/small_sludge.jpeg",
+      "drops": {
+        "sludge": {
+          "start": 8,
+          "end": 40
+        },
+        "super_nanners": null,
+        "items": [
+          {
+            "HealingPotion": {
+              "health": 5
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "drop_table": {
+    "sludge": {
+      "start": 0,
+      "end": 10
+    },
+    "super_nanners": {
+      "start": 1,
+      "end": 1
+    },
+    "items": [
+      {
+        "HealingPotion": {
+          "health": 5
+        }
+      },
+      {
+        "SpellTome": {
+          "name": "Mighty Winds",
+          "damage": {
+            "start": 5,
+            "end": 25
+          }
+        }
+      }
+    ]
+  }
+}

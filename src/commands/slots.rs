@@ -8,7 +8,7 @@ use serenity::model::Colour;
 use crate::{command_response, hey, SKEPZ_WIN_ALWAYS, SUPERBOOST, SUPERBOOST_MODE};
 use crate::userfile::UserValues;
 
-const WIN_PERCENTAGE: f64 = 0.2;
+const WIN_PERCENTAGE: f64 = 0.35;
 
 #[derive(PartialEq, Clone, Eq)]
 enum SlotVariant {

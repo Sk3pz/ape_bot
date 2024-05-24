@@ -7,10 +7,9 @@ use rand::{Rng, thread_rng};
 use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction, Context, CreateAttachment, CreateCommand, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, GatewayIntents, Interaction, Member, Mentionable, Message, OnlineStatus, PartialGuild, Ready, ResumedEvent, Timestamp, UserId, VoiceState};
 use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
-use crate::commands::{admin, banana, blackjack_cmd, fiftyfifty, help, mine, slots};
+use crate::commands::{admin, banana, blackjack_cmd, buy, collect_minions, discard, fiftyfifty, help, inventory_cmd, mine, shop, slots};
 use crate::games::{GamesManager};
-use crate::inventory::{item, super_drill};
-use crate::inventory::item::InventoryItem::SuperDrill;
+use crate::mine_data::Mine;
 
 pub mod logging;
 pub mod userfile;
@@ -18,6 +17,7 @@ pub mod guildfile;
 mod commands;
 pub mod games;
 mod inventory;
+mod mine_data;
 
 lazy_static!(
     static ref CRATE_ACTIVE: Mutex<AtomicBool> = Mutex::new(AtomicBool::new(false));
@@ -207,7 +207,7 @@ impl EventHandler for Handler {
             // ensure the channel is a spam channel
             let mut guild_file = guildfile::GuildSettings::get(&msg.guild_id.unwrap());
             if !guild_file.is_allowed_channel(channel.get()) {
-                (None, String::new())
+                (None, None)
             } else {
                 let mut lock = GAMES.lock().expect("Failed to get games lock");
                 if let Some(code) = lock.get_player_game(&user.id) {
@@ -220,7 +220,7 @@ impl EventHandler for Handler {
                                 lock.end_game(code);
                             }
 
-                            (Some(embed), "./images/monkey.png".to_string())
+                            (Some(embed), Some("./images/monkey.png".to_string()))
                         }
                         games::Games::SludgeMonsterBattle(ref mut battle) => {
                             let (mut embed, end) = battle.handle_message(&msg);
@@ -233,7 +233,16 @@ impl EventHandler for Handler {
                                 lock.end_game(code);
                             }
 
-                            (Some(embed), format!("./images/sludge_monsters/{}", thumbnail_path))
+                            (Some(embed), Some(format!("./images/sludge_monsters/{}", thumbnail_path)))
+                        }
+                        games::Games::MineBattle(ref mut battle) => {
+                            let (embed, end) = battle.handle_message(&msg);
+
+                            if end {
+                                lock.end_game(code);
+                            }
+
+                            (Some(embed), None)
                         }
                         games::Games::TexasHoldem(ref mut th) => {
                             let (embed, end) = th.handle_message(&msg);
@@ -242,21 +251,24 @@ impl EventHandler for Handler {
                                 lock.end_game(code);
                             }
 
-                            (Some(embed), "failed".to_string())
+                            (Some(embed), None)
                         }
                     }
                 } else {
-                    (None, "".to_string())
+                    (None, None)
                 }
             }
         };
 
         if let Some(embed) = embed {
-            let builder = CreateMessage::new()
+            let mut builder = CreateMessage::new()
                 .content(format!("{}", user.mention()))
                 .embed(embed)
-                .reference_message(&msg)
-                .add_file(CreateAttachment::path(format!("{}", thumbnail_path)).await.unwrap());
+                .reference_message(&msg);
+
+            if let Some(thumbnail_path) = thumbnail_path {
+                builder = builder.add_file(CreateAttachment::path(format!("{}", thumbnail_path)).await.unwrap());
+            }
 
             if let Err(e) = channel.send_message(&ctx.http, builder).await {
                 nay!("Failed to send message: {}", e);
@@ -364,6 +376,11 @@ impl EventHandler for Handler {
         register_command(&ctx, slots::register()).await;
         register_command(&ctx, fiftyfifty::register()).await;
         register_command(&ctx, mine::register()).await;
+        register_command(&ctx, inventory_cmd::register()).await;
+        register_command(&ctx, shop::register()).await;
+        register_command(&ctx, buy::register()).await;
+        register_command(&ctx, discard::register()).await;
+        register_command(&ctx, collect_minions::register()).await;
 
         register_command(&ctx, admin::register()).await;
 
@@ -450,8 +467,28 @@ impl EventHandler for Handler {
                         banana::ascend::run(&ctx, &command, &sender.id).await;
                         return;
                     }
+                    "inventory" => {
+                        inventory_cmd::run(&ctx, &command).await;
+                        return;
+                    }
+                    "shop" => {
+                        shop::run(&ctx, &command).await;
+                        return;
+                    }
+                    "buy" => {
+                        buy::run(command_options, &ctx, &command).await;
+                        return;
+                    }
+                    "discard" => {
+                        discard::run(command_options, &ctx, &command).await;
+                        return;
+                    }
+                    "collect_minions" => {
+                        collect_minions::run(&ctx, &command).await;
+                        return;
+                    }
                     "admin_channel" => {
-                        admin::run(command_options, &ctx, &command, &sender.id, &guild_id).await;
+                        admin::run(command_options, &ctx, &command, &guild_id).await;
                         return;
                     }
                     _ => {}
@@ -470,7 +507,7 @@ impl EventHandler for Handler {
                             fiftyfifty::run(&ctx, &command, &sender.id).await;
                         }
                         "mine" => {
-                            mine::run(&ctx, &channel, command.clone(), &sender.id).await;
+                            mine::run(command_options, &ctx, &channel, command.clone(), &sender.id).await;
                         }
                         _ => {
                             command_response(&ctx, &command, "That do be a monkey brain moment").await;
@@ -517,6 +554,21 @@ async fn main() {
         nay!("DISCORD_TOKEN not found in environment");
         return;
     };
+
+    /*
+        Ensure the following directories exist:
+        ./guilds
+        ./users
+    */
+    let paths = vec!["./guilds", "./users"];
+    for path in paths {
+        if !std::path::Path::new(path).exists() {
+            std::fs::create_dir(path).expect("Failed to create directory");
+        }
+    }
+
+    // ensure all mine tier files are valid before loading the bot
+    let _mine = Mine::get();
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES

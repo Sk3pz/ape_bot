@@ -14,6 +14,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
         .fields(
             vec![
                 ("Bananas:", format!("{}:banana:", userfile.get_bananas()), true),
+                ("Super Nanners:", format!("{}:zap:", userfile.get_super_nanners()), true),
                 ("Level:", format!("{}", userfile.get_level()), true),
                 if userfile.get_level() < 100 {
                     ("Next Level:", format!("{}:banana: ({})", userfile.levelup_cost(), if userfile.can_levelup() { ":heavy_check_mark:" } else { ":heavy_multiplication_x:" }), true)
