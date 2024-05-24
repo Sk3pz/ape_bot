@@ -42,7 +42,7 @@ impl UserValues {
                 bananas: 0,
                 super_nanners: 0,
                 ascension: 0,
-                mine_tier: 0,
+                mine_tier: 1,
 
                 inventory: Inventory {
                     items: Vec::new(),

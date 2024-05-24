@@ -19,29 +19,6 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
 
     let current_tier = mine.get_tier(user_file.get_mine_tier());
 
-    // check that the user has a super drill if it is required
-    if current_tier.required_super_drill_tier >= user_file.get_super_drill_tier() {
-        let embed = CreateEmbed::new()
-            .title("MINING FAILURE")
-            .thumbnail("attachment://disappointed.jpeg")
-            .description("You need a better drill to mine here.".to_string())
-            .field("Sludge Mined:", "0", true)
-            .field("Bananas Earned:", "0", true)
-            .color(Colour::RED)
-            .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"));
-
-        let builder = CreateMessage::new()
-            .content(format!("{}", sender.mention()))
-            .embed(embed)
-            .add_file(CreateAttachment::path("./images/disappointed.jpeg").await.unwrap());
-
-        if let Err(e) = channel.send_message(&http, builder).await {
-            nay!("Failed to send message: {}", e);
-        }
-
-        return;
-    }
-
     // creature (12.5% chance)
     if thread_rng().gen_range(0..8) == 0 {
         let creature = current_tier.random_enemy();
@@ -233,6 +210,16 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, channel: &Channe
         }
 
         user_file.set_mine_tier(tier as u8);
+    }
+
+    let current_tier = mine.get_tier(user_file.get_mine_tier());
+
+    // check that the user has a super drill if it is required
+    if current_tier.required_super_drill_tier > user_file.get_super_drill_tier() {
+        // todo: update with super drill tier
+        command_response(ctx, &command, "You can't mine here! Obtain the Super Drill and come back later!").await;
+
+        return;
     }
 
     // add user to mining
