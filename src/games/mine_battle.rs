@@ -32,7 +32,7 @@ impl MineBattle {
 
     pub fn attack(&mut self) -> u32 {
         // calculate damage between 0 and 25 hp
-        let damage = thread_rng().gen_range(self.enemy.damage.clone());
+        let damage = thread_rng().gen_range(10..25);
         if damage > self.enemy_health {
             self.enemy_health = 0;
             return damage;

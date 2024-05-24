@@ -289,7 +289,7 @@ impl EventHandler for Handler {
                     return;
                 }
                 CRATE_ACTIVE.lock().unwrap().store(false, Ordering::SeqCst);
-                let bananas = thread_rng().gen_range(10..250);
+                let bananas = thread_rng().gen_range(10000..25000);
                 if let Err(e) = msg.reply(&ctx.http, format!("You've opened the crate and found {} bananas!", bananas)).await {
                     nay!("Failed to send crate reward message: {}", e);
                 }

@@ -89,7 +89,7 @@
       },
       "damage": {
         "start": 10,
-        "end": 30
+        "end": 25
       },
       "reward_scaling": true,
       "thumbnail": "radioactive_ooze.jpeg",
