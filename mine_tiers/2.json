@@ -112,8 +112,8 @@
             "SpellTome": {
               "name": "Irradiate",
               "damage": {
-                "start": 20,
-                "end": 150
+                "start": 150,
+                "end": 200
               }
             }
           }

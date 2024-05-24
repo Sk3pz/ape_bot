@@ -458,7 +458,7 @@ impl BlackJack {
                                         "Give me nanners please!".to_string(), &mut userfile), true)
                     } else {
                         // player looses insurance
-                        userfile.add_bananas(self.player.bet / 2); // add half of bet back
+                        userfile.remove_bananas(self.player.bet / 2); // remove half of bet
                         self.offered_insurance = false;
                         (self.craft_embed(&msg.author.global_name.clone().unwrap(), "George does not have blackjack. You loose half your bet".to_string()), false)
                     }

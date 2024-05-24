@@ -11,6 +11,7 @@ pub struct MineBattle {
     pub player_health: u32,
     pub initial_health: u32,
     pub has_prayed: bool,
+    pub thumbnail: String,
 }
 
 impl MineBattle {
@@ -21,6 +22,7 @@ impl MineBattle {
         // convert to round 100 base number
         let enemy_health = enemy_health - (enemy_health % 100);
         Self {
+            thumbnail: enemy.thumbnail.clone(),
             enemy,
             sludge_value,
             enemy_health,
@@ -74,15 +76,21 @@ impl MineBattle {
             }
             InventoryItem::SpellTome { name, damage } => {
                 let damage = thread_rng().gen_range(damage);
+
+                let used = name.as_str() != "Developer Tome";
+                if !used {
+                    self.thumbnail = "developer_tome.jpeg".to_string();
+                }
+
                 if damage > self.enemy_health {
                     self.enemy_health = 0;
-                    return (true, self.handle_win(user));
+                    return (used, self.handle_win(user, format!("You have defeated the {} using your {}.", self.enemy.name, name)));
                 }
                 self.enemy_health -= damage;
 
                 let boss_attack = self.enemy_turn();
 
-                (true, (self.craft_embed(format!("You used {} and dealt {} damage! The {} attacked you for {} damage!",
+                (used, (self.craft_embed(format!("You used {} and dealt {} damage! The {} attacked you for {} damage!",
                                                  name, damage, self.enemy.name, boss_attack)), false))
             }
             _ => { (false, (self.craft_embed("You can not use that item here!".to_string()), false)) }
@@ -93,7 +101,7 @@ impl MineBattle {
         // create an embed message for the battle
         CreateEmbed::new()
             .title(format!("{} Battle", self.enemy.name))
-            .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
+            .thumbnail(format!("attachment://{}", self.thumbnail))
             .description(message)
             .color(Colour::DARK_GREEN)
             .fields(
@@ -105,7 +113,7 @@ impl MineBattle {
             )
     }
 
-    pub fn handle_win(&self, user: UserId) -> (CreateEmbed, bool) {
+    pub fn handle_win(&self, user: UserId, msg: String) -> (CreateEmbed, bool) {
         let mut user_file = UserValues::get(&user);
 
         let reward_chance = thread_rng().gen_range(0..3);
@@ -121,8 +129,8 @@ impl MineBattle {
                 user_file.add_bananas(reward as u64);
                 (CreateEmbed::new()
                      .title("Victory!")
-                     .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
-                     .description(format!("You have defeated the {} and have been rewarded with some bananas!", self.enemy.name))
+                     .thumbnail(format!("attachment://{}", self.thumbnail))
+                     .description(format!("{} You have been rewarded with some bananas!", msg))
                      .field("Reward:", format!("{}:banana:", reward), false)
                      .color(Colour::DARK_GREEN)
                      .timestamp(Timestamp::now())
@@ -133,9 +141,9 @@ impl MineBattle {
                 let item = self.enemy.drops.random_item();
                 if user_file.file.inventory.is_full() {
                     return (CreateEmbed::new()
-                                .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
+                                .thumbnail(format!("attachment://{}", self.thumbnail))
                                 .title("Victory!")
-                                .description(format!("You have defeated the {} and have been rewarded with an item, but your inventory is full!", self.enemy.name))
+                                .description(format!("{} You have been rewarded with an item, but your inventory is full!", msg))
                                 .field("Reward:", format!(":x: {}", item), false)
                                 .color(Colour::RED)
                                 .timestamp(Timestamp::now())
@@ -145,8 +153,8 @@ impl MineBattle {
                 user_file.add_item(item.clone());
                 (CreateEmbed::new()
                      .title("Victory!")
-                     .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
-                     .description(format!("You have defeated the {} and have been rewarded with an item!", self.enemy.name))
+                     .thumbnail(format!("attachment://{}", self.thumbnail))
+                     .description(format!("{} You have been rewarded with an item!", msg))
                      .field("Reward:", format!("{}", item), false)
                      .color(Colour::DARK_GREEN)
                      .timestamp(Timestamp::now())
@@ -158,8 +166,8 @@ impl MineBattle {
                 user_file.add_super_nanners(nanners);
                 (CreateEmbed::new()
                      .title("Victory!")
-                     .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
-                     .description(format!("You have defeated the {} and have been rewarded with some super nanners!", self.enemy.name))
+                     .thumbnail(format!("attachment://{}", self.thumbnail))
+                     .description(format!("{} You have been rewarded with some super nanners!", msg))
                      .field("Reward:", format!("{}:zap:", nanners), false)
                      .color(Colour::DARK_GREEN)
                      .timestamp(Timestamp::now())
@@ -188,7 +196,7 @@ impl MineBattle {
         return (CreateEmbed::new()
                     .title("Defeat!")
                     .description(format!("The {} defeated you and has stolen some bananas!", self.enemy.name))
-                    .thumbnail(format!("attachment://{}", self.enemy.thumbnail))
+                    .thumbnail(format!("attachment://{}", self.thumbnail))
                     .field("Lost Bananas:", format!("{}:banana:", cost), false)
                     .color(Colour::RED)
                     .timestamp(Timestamp::now())
@@ -206,7 +214,7 @@ impl MineBattle {
                 let attack = self.attack();
 
                 if self.enemy_health == 0 {
-                    return self.handle_win(msg.author.id);
+                    return self.handle_win(msg.author.id, format!("You have defeated the {}!", self.enemy.name));
                 }
 
                 let boss_attack = self.enemy_turn();
@@ -251,7 +259,8 @@ impl MineBattle {
                     return (self.craft_embed("You have already prayed this battle! (This easter egg can't be too powerful!)".to_string()), false)
                 }
 
-                let heal = thread_rng().gen_range(1..=25);
+                //let heal = thread_rng().gen_range(1..=25);
+                let heal = 200 - self.player_health;
                 self.heal_player(heal);
                 self.has_prayed = true;
                 (self.craft_embed(format!("You prayed and healed for {}hp!", heal)), false)

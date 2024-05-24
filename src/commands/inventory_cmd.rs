@@ -48,7 +48,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
                 items.push((format!("{}: Super Drill", x), format!("Tier {}", drill.tier), true));
             }
             InventoryItem::SpellTome { name, damage } => {
-                items.push((format!("{}: {} Tome", x, name), format!("{}dmg", damage.end()), true));
+                items.push((format!("{}: {} Tome", x, name), format!("{}-{} damage", damage.start(), damage.end()), true));
             }
         }
     }

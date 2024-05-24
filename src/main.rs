@@ -235,7 +235,7 @@ impl EventHandler for Handler {
                             games::Games::MineBattle(ref mut battle) => {
                                 let (mut embed, end) = battle.handle_message(&msg);
 
-                                let thumbnail = battle.enemy.thumbnail.clone();
+                                let thumbnail = battle.thumbnail.clone();
 
                                 embed = embed.thumbnail(format!("attachment://{}", thumbnail));
 
