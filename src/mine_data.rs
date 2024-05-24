@@ -39,7 +39,7 @@ pub struct Enemy {
 pub struct MineTier {
     pub required_super_drill_tier: u8,
     pub sludge_worth: u32,
-    pub super_nanner_chance: f32,
+    pub super_nanner_chance: u32,
     pub creatures: Vec<Enemy>,
     pub drop_table: DropTable,
 }

@@ -1,7 +1,7 @@
 {
   "required_super_drill_tier": 1,
   "sludge_worth": 500,
-  "super_nanner_chance": 0.05,
+  "super_nanner_chance": 10,
   "creatures": [
     {
       "name": "Toxic Slime",

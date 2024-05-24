@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use rand::{Rng, thread_rng};
 use serenity::all::{ChannelId, Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateEmbedFooter, CreateMessage, Http, Mentionable, ResolvedOption, ResolvedValue, Timestamp, UserId};
-use crate::{command_response, GAMES, MINING, nay};
+use crate::{command_response, GAMES, hey, MINING, nay};
 use crate::games::{GameHandler, Games};
 use crate::games::mine_battle::MineBattle;
 use crate::mine_data::Mine;
@@ -59,8 +59,9 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
     }
 
     // super nanner chance
-    let super_nanner_chance = thread_rng().gen_range(0.0..1.0);
-    if current_tier.super_nanner_chance <= super_nanner_chance {
+    let chance = thread_rng().gen_range(0..100);
+    if current_tier.super_nanner_chance > chance {
+        hey!("Chance: {}/{}", current_tier.super_nanner_chance, chance);
         user_file.add_super_nanners(1);
         let embed = CreateEmbed::new()
             .title("SUPER NANNER EVENT")
@@ -82,8 +83,7 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
     }
 
     // item drop chance
-    let item_drop_chance = thread_rng().gen_range(0.0..1.0);
-    if item_drop_chance <= 0.2 {
+    if 8 > thread_rng().gen_range(0..100) {
         let item = current_tier.drop_table.random_item();
 
         let embed = if user_file.file.inventory.is_full() {
@@ -123,6 +123,7 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
             .title("MINING FAILURE")
             .thumbnail("attachment://disappointed.jpeg")
             .description("A.P.E. Inc© is disappointed in you. Do better next time.".to_string())
+            .field("Tier:", format!("{}", user_file.get_mine_tier()), true)
             .field("Sludge Mined:", "0", true)
             .field("Bananas Earned:", "0", true)
             .color(Colour::RED)
@@ -157,6 +158,7 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
         .title("MINING SUCCESS")
         .thumbnail("attachment://mining_ape.jpeg")
         .description("A.P.E. Inc© is proud of your work".to_string())
+        .field("Tier:", format!("{}", user_file.get_mine_tier()), true)
         .field("Sludge Mined:", format!("{}", sludge), true)
         .field("Bananas Earned:", format!("{}:banana:", value), true)
         .color(Colour::DARK_GREEN)
@@ -204,7 +206,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, channel: &Channe
     if let Some(ResolvedOption { value: ResolvedValue::Integer(tier, ..), .. }) = options.first() {
         let tier = *tier;
         // ensure tier is a valid tier
-        if tier < 0 || tier >= mine.tiers.len() as i64 {
+        if tier < 0 || tier > mine.tiers.len() as i64 {
             command_response(ctx, &command, "Invalid mine tier!").await;
             return;
         }
@@ -217,7 +219,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, channel: &Channe
     // check that the user has a super drill if it is required
     if current_tier.required_super_drill_tier > user_file.get_super_drill_tier() {
         // todo: update with super drill tier
-        command_response(ctx, &command, "You can't mine here! Obtain the Super Drill and come back later!").await;
+        command_response(ctx, &command, format!("You can't mine here! Obtain the Super Drill and come back later! Tier: {}", user_file.get_mine_tier())).await;
 
         return;
     }

@@ -1,7 +1,7 @@
 {
   "required_super_drill_tier": 0,
   "sludge_worth": 250,
-  "super_nanner_chance": 0.02,
+  "super_nanner_chance": 5,
   "creatures": [
     {
       "name": "Sludge Monster",
