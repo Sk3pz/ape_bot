@@ -27,29 +27,29 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 command_response(ctx, &cmd, "You already own this item!").await;
                 return;
             }
-            if user_file.get_super_nanners() < 50 {
+            if user_file.get_super_nanners() < 15 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
             }
             user_file.add_item(InventoryItem::SuperDrill(SuperDrill { tier: 1 }));
-            user_file.remove_super_nanners(50);
+            user_file.remove_super_nanners(15);
 
             CreateEmbed::new()
                 .title("Purchase Successful")
                 .description("You have purchased the Super Pickaxe!")
                 .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
-                .field("Cost", "50:zap:", true)
+                .field("Cost", "15:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
         2 => { // minion
-            if user_file.get_super_nanners() < 30 {
+            if user_file.get_super_nanners() < 10 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
             }
             user_file.add_item(InventoryItem::Minion(Minion { level: 1, mining_start: Timestamp::now() }));
-            user_file.remove_super_nanners(30);
+            user_file.remove_super_nanners(10);
 
             CreateEmbed::new()
                 .title("Purchase Successful")

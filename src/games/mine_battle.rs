@@ -111,11 +111,12 @@ impl MineBattle {
         let reward_chance = thread_rng().gen_range(0..3);
         match reward_chance {
             0 => { // sludge mined
+                let sludge = self.enemy.drops.sludge.clone();
                 let reward = if self.enemy.reward_scaling {
                     // multiply the winnings by health / 100
-                    self.sludge_value * self.initial_health / 100
+                    self.sludge_value * ((self.initial_health / 100) * thread_rng().gen_range(sludge))
                 } else {
-                    self.sludge_value
+                    self.sludge_value * thread_rng().gen_range(sludge)
                 };
                 user_file.add_bananas(reward as u64);
                 (CreateEmbed::new()
