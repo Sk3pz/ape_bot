@@ -32,7 +32,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
             .title(format!("50/50 ({} for {}:banana:)", user.to_user(&ctx.http).await.unwrap().global_name.unwrap(), amt))
             .description("Me no like when you win ")
             .color(Colour::GOLD)
-            .field("You Win!", format!("You gain {}:banana:!", winnings), false)
+            .field("You Win!", format!("Balance: {}:banana:", userfile.get_bananas()), false)
             .footer(CreateEmbedFooter::new("Me sad"))
     } else {
         userfile.remove_bananas(amt);
@@ -40,7 +40,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
             .title(format!("50/50 ({} for {}:banana:)", user.to_user(&ctx.http).await.unwrap().global_name.unwrap(), amt))
             .description("All your bananas are belong to me")
             .color(Colour::GOLD)
-            .field("You Lost!", format!("You lost {}:banana:", amt), false)
+            .field("You Lost!", format!("Balance: {}:banana:", userfile.get_bananas()), false)
             .footer(CreateEmbedFooter::new("Me eat good tonight!"))
     };
 

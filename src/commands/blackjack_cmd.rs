@@ -1,6 +1,6 @@
 use serenity::all::{Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue, UserId};
 use crate::games::blackjack::BlackJack;
-use crate::{command_response, GAMES, nay};
+use crate::{command_response, GAMES, MINING, nay};
 use crate::games::{Games, GameHandler};
 use crate::userfile::UserValues;
 
@@ -10,6 +10,13 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         command_response(ctx, command, "Me confused, You must bet a number of bananas").await;
         return;
     };
+
+    // if the user is mining
+    if MINING.lock().unwrap().contains(user) {
+        // error message
+        command_response(ctx, command, "You are currently mining!").await;
+        return;
+    }
 
     let mut userfile = UserValues::get(user);
 
