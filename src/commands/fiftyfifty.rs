@@ -21,7 +21,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction, user: &UserId) {
     // 50% chance to win
     let win = thread_rng().gen_range(0..2) == 1;
 
-    let embed = if win || (SKEPZ_WIN_ALWAYS.load(SeqCst) && user.get() == 318884828508454912)  {
+    let embed = if win || (SKEPZ_WIN_ALWAYS.load(SeqCst) && (user.get() == 318884828508454912))  {
         let mut winnings = amt;
         if SUPERBOOST_MODE.load(SeqCst) {
             winnings *= SUPERBOOST;

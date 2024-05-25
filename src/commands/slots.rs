@@ -8,7 +8,7 @@ use serenity::model::Colour;
 use crate::{command_response, hey, SKEPZ_WIN_ALWAYS, SUPERBOOST, SUPERBOOST_MODE};
 use crate::userfile::UserValues;
 
-const WIN_PERCENTAGE: f64 = 0.35;
+const WIN_PERCENTAGE: f64 = 0.2;
 
 #[derive(PartialEq, Clone, Eq)]
 enum SlotVariant {
@@ -103,9 +103,12 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
 
     let mut userfile = UserValues::get(user);
 
+    let mut all_in = false;
+
     // parse out `k` `m` and all
     let raw_amt = raw_amt.to_lowercase();
     let amt = if raw_amt == "all" {
+        all_in = true;
         userfile.get_bananas()
     } else if raw_amt == "half" {
         userfile.get_bananas() / 2
@@ -122,6 +125,10 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         parse
     };
 
+    if amt == userfile.get_bananas() {
+        all_in = true;
+    }
+
     if amt < 100 {
         // error message
         command_response(ctx, command, "You must bet at least 100 bananas").await;
@@ -135,8 +142,15 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         return;
     }
 
-    let (first, second, third) = if thread_rng().gen_bool(WIN_PERCENTAGE) || (user.get() == 318884828508454912 && SKEPZ_WIN_ALWAYS.load(SeqCst)) {
-        let slot = SlotVariant::random();
+    let (first, second, third) = if thread_rng().gen_bool(WIN_PERCENTAGE)
+        || ((user.get() == 318884828508454912) && SKEPZ_WIN_ALWAYS.load(SeqCst)) {
+
+        let mut slot = SlotVariant::random();
+
+        if (user.get() == 318884828508454912) && SKEPZ_WIN_ALWAYS.load(SeqCst) {
+            slot = SlotVariant::Cherry;
+        }
+
         (slot.clone(), slot.clone(), slot)
     } else {
         let mut first = SlotVariant::random();
@@ -166,6 +180,9 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         let mut winnings = (amt as f32 * first.value()) as u64;
         if SUPERBOOST_MODE.load(SeqCst) {
             winnings *= SUPERBOOST;
+        }
+        if all_in {
+            winnings += winnings / 2;
         }
         userfile.add_bananas(winnings);
 

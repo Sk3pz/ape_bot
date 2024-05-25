@@ -84,13 +84,13 @@ impl MineBattle {
 
                 if damage > self.enemy_health {
                     self.enemy_health = 0;
-                    return (used, self.handle_win(user, format!("You have defeated the {} using your {}.", self.enemy.name, name)));
+                    return (used, self.handle_win(user, format!("You have defeated the {} using your {} Tome.", self.enemy.name, name)));
                 }
                 self.enemy_health -= damage;
 
                 let boss_attack = self.enemy_turn();
 
-                (used, (self.craft_embed(format!("You used {} and dealt {} damage! The {} attacked you for {} damage!",
+                (used, (self.craft_embed(format!("You used your {} Tome and dealt {} damage! The {} attacked you for {} damage!",
                                                  name, damage, self.enemy.name, boss_attack)), false))
             }
             _ => { (false, (self.craft_embed("You can not use that item here!".to_string()), false)) }

@@ -19,10 +19,12 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
                     top_users.push(user.clone());
                 }
 
+                // todo: leaderboard doesn't prioritize ascension
+
                 if top_users.len() == 3 {
                     if user.file.ascension > top_users[2].file.ascension {
                         top_users[2] = user.clone();
-                    } else {
+                    } else if user.file.ascension == top_users[2].file.ascension {
                         if user.file.prestige > top_users[2].file.prestige {
                             top_users[2] = user.clone();
                         } else if user.file.prestige == top_users[2].file.prestige {
@@ -38,7 +40,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
                     if user.file.ascension > top_users[1].file.ascension {
                         top_users[2] = top_users[1].clone();
                         top_users[1] = user.clone();
-                    } else {
+                    } else if user.file.ascension == top_users[1].file.ascension {
                         if user.file.prestige > top_users[1].file.prestige {
                             top_users[2] = top_users[1].clone();
                             top_users[1] = user.clone();
@@ -56,7 +58,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
                     if user.file.ascension > top_users[0].file.ascension {
                         top_users[1] = top_users[0].clone();
                         top_users[0] = user.clone();
-                    } else {
+                    } else if user.file.ascension == top_users[0].file.ascension {
                         if user.file.prestige > top_users[0].file.prestige {
                             top_users[1] = top_users[0].clone();
                             top_users[0] = user.clone();
