@@ -22,7 +22,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
     }
 
     let embed = match item {
-        1 => { // super pickaxe
+        1 => { // Super Pickaxe
             if user_file.has_super_drill() {
                 command_response(ctx, &cmd, "You already own this item!").await;
                 return;
@@ -43,7 +43,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
-        2 => { // minion
+        2 => { // Minion
             if user_file.get_super_nanners() < 10 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
@@ -60,7 +60,41 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
-        3 => { // healing potion
+        3 => { // Spell Tome - Fireball 25-40hp
+            if user_file.get_super_nanners() < 5 {
+                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
+                return;
+            }
+            user_file.add_item(InventoryItem::SpellTome { name: "Fireball".to_string(), damage: 25..=40 });
+            user_file.remove_super_nanners(3);
+
+            CreateEmbed::new()
+                .title("Purchase Successful")
+                .description("You have purchased a Fireball Spell Tome!")
+                .thumbnail("attachment://shop.jpeg")
+                .color(Colour::GOLD)
+                .field("Cost", "5:zap:", true)
+                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
+                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
+        }
+        3 => { // Spell Tome - Mighty Winds 5-25hp
+            if user_file.get_super_nanners() < 3 {
+                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
+                return;
+            }
+            user_file.add_item(InventoryItem::SpellTome { name: "Mighty Winds".to_string(), damage: 5..=25 });
+            user_file.remove_super_nanners(3);
+
+            CreateEmbed::new()
+                .title("Purchase Successful")
+                .description("You have purchased a Mighty Winds Spell Tome!")
+                .thumbnail("attachment://shop.jpeg")
+                .color(Colour::GOLD)
+                .field("Cost", "3:zap:", true)
+                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
+                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
+        }
+        5 => { // Healing Potion - 25hp
             if user_file.get_super_nanners() < 2 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
@@ -70,10 +104,27 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
 
             CreateEmbed::new()
                 .title("Purchase Successful")
-                .description("You have purchased a Healing Potion!")
+                .description("You have purchased a Healing Potion (25hp)!")
                 .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
                 .field("Cost", "2:zap:", true)
+                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
+                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
+        }
+        6 => { // Healing Potion - 15hp
+            if user_file.get_super_nanners() < 1 {
+                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
+                return;
+            }
+            user_file.add_item(InventoryItem::HealingPotion { health: 10 });
+            user_file.remove_super_nanners(2);
+
+            CreateEmbed::new()
+                .title("Purchase Successful")
+                .description("You have purchased a Healing Potion (10hp)!")
+                .thumbnail("attachment://shop.jpeg")
+                .color(Colour::GOLD)
+                .field("Cost", "1:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
