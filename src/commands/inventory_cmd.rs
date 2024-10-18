@@ -10,6 +10,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
     let mut user_file = UserValues::get(&cmd.user.id);
 
     let inv = user_file.get_items();
+    let equipped = user_file.file.inventory.equiped;
 
     if inv.is_empty() {
         let embed = CreateEmbed::new()
@@ -50,12 +51,15 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
             InventoryItem::SpellTome { name, damage } => {
                 items.push((format!("{}: {} Tome", x, name), format!("{}-{} damage", damage.start(), damage.end()), true));
             }
+            InventoryItem::Weapon { name, wtype, damage } => {
+                items.push((format!("{}: {} ({})", x, name, wtype), format!("{}-{} damage", damage.start(), damage.end()), true));
+            }
         }
     }
 
     let embed = CreateEmbed::new()
         .title("Inventory")
-        .description("Your items!")
+        .description(format!("Your items!\nEquipped: {}", if let Some(e) = equipped { (e + 1).to_string() } else { "None".to_string() }).as_str())
         .color(Colour::GOLD)
         .thumbnail("attachment://backpack.jpeg")
         .fields(items)

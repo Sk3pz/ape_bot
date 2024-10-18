@@ -7,9 +7,15 @@ use rand::{Rng, thread_rng};
 use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction, Context, CreateAttachment, CreateCommand, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, GatewayIntents, Interaction, Member, Mentionable, Message, OnlineStatus, PartialGuild, Ready, ResumedEvent, Timestamp, UserId, VoiceState};
 use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
-use crate::commands::{admin, banana, blackjack_cmd, buy, collect_minions, discard, fiftyfifty, help, inventory_cmd, mine, shop, slots};
+use crate::commands::{admin, banana, blackjack_cmd, buy, collect_minions, discard, equip, fiftyfifty, help, inventory_cmd, join, mine, pvp_command, shop, slots, unequip};
 use crate::games::{GamesManager};
 use crate::mine_data::Mine;
+
+// TODO: broken:
+//    using items breaks the currently equipped item, need to fix
+//    health items are not working in pvp
+//    item index in pvp is 0 based, should be 1 based
+
 
 pub mod logging;
 pub mod userfile;
@@ -25,6 +31,8 @@ lazy_static!(
 
     static ref USERS_IN_VOICE: Mutex<Vec<(UserId, Timestamp)>> = Mutex::new(Vec::new());
 
+    // TODO: store channel id with games so they are locked to a channel to prevent bugs
+    //    but be sure players cant do multiple games still
     static ref GAMES: Mutex<GamesManager> = Mutex::new(GamesManager::new());
 
     static ref MINING: Mutex<Vec<UserId>> = Mutex::new(Vec::new());
@@ -209,6 +217,8 @@ impl EventHandler for Handler {
                     let mut lock = GAMES.lock().expect("Failed to get games lock");
                     if let Some(code) = lock.get_player_game(&user.id) {
                         let game = lock.get_game(code).unwrap();
+                        // todo: this captures all messages, needs rework to only capture messages that are direct game commands
+                        //   note: pvp arena already implements this
                         match game.game {
                             games::Games::BlackJack(ref mut bj) => {
                                 let (embed, end) = bj.handle_message(&msg);
@@ -253,6 +263,44 @@ impl EventHandler for Handler {
                                 }
 
                                 (Some(embed), None)
+                            }
+                            games::Games::PvP(ref mut arena) => {
+                                if arena.is_running() {
+                                    // game is running handle messages
+                                    if let Some((embed, end, user_to_remove)) = arena.handle_message(&ctx, user.id, &msg) {
+                                        if end {
+                                            lock.end_game(code);
+                                        }
+
+                                        if let Some(usr) = user_to_remove {
+                                            lock.remove_player_from_game(code, usr);
+                                        }
+
+                                        (Some(embed), Some("./images/battle_monkey.jpeg".to_string()))
+                                    } else {
+                                        (None, None)
+                                    }
+                                } else {
+                                    // game is not yet started but host messages are being processed
+                                    if arena.is_host(user.id) {
+                                        if let Some((embed, end, user_to_remove)) = arena.handle_prestart_message(&ctx, user.id, &msg) {
+                                            if end {
+                                                lock.end_game(code);
+                                            }
+
+                                            if let Some(usr) = user_to_remove {
+                                                lock.remove_player_from_game(code, usr);
+                                            }
+
+                                            (Some(embed), Some("./images/battle_monkey.jpeg".to_string()))
+                                        } else {
+                                            (None, None)
+                                        }
+                                    } else {
+                                        (None, None)
+                                    }
+                                }
+
                             }
                         }
                     } else {
@@ -385,6 +433,10 @@ impl EventHandler for Handler {
         register_command(&ctx, buy::register()).await;
         register_command(&ctx, discard::register()).await;
         register_command(&ctx, collect_minions::register()).await;
+        register_command(&ctx, equip::register()).await;
+        register_command(&ctx, unequip::register()).await;
+        register_command(&ctx, pvp_command::register()).await;
+        register_command(&ctx, join::register()).await;
 
         register_command(&ctx, admin::register()).await;
 
@@ -489,6 +541,22 @@ impl EventHandler for Handler {
                     }
                     "collect_minions" => {
                         collect_minions::run(&ctx, &command).await;
+                        return;
+                    }
+                    "equip" => {
+                        equip::run(command_options, &ctx, &command).await;
+                        return;
+                    }
+                    "unequip" => {
+                        unequip::run(&ctx, &command).await;
+                        return;
+                    }
+                    "pvp" => {
+                        pvp_command::run(command_options, &ctx, &command, &sender.id).await;
+                        return;
+                    }
+                    "join" => {
+                        join::run(command_options, &ctx, &command, &sender.id).await;
                         return;
                     }
                     "admin_channel" => {

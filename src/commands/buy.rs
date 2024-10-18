@@ -1,6 +1,6 @@
 use serenity::all::{Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, ResolvedOption, ResolvedValue, Timestamp};
 use crate::{command_response, nay};
-use crate::inventory::item::InventoryItem;
+use crate::inventory::item::{InventoryItem, WeaponType};
 use crate::inventory::minion::Minion;
 use crate::inventory::super_drill::SuperDrill;
 use crate::userfile::UserValues;
@@ -8,7 +8,7 @@ use crate::userfile::UserValues;
 pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInteraction) {
     let Some(ResolvedOption { value: ResolvedValue::Integer(item, ..), .. }) = options.first() else {
         // error message
-        command_response(ctx, &cmd, "Me confused, Enter a number for the mine level you want to mine at.").await;
+        command_response(ctx, &cmd, "Me confused, Enter the number of the item you wish to buy").await;
         return;
     };
 
@@ -60,7 +60,49 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
-        3 => { // Spell Tome - Fireball 25-40hp
+        3 => { // Stick of Thwacking
+            if user_file.get_super_nanners() < 5 {
+                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
+                return;
+            }
+            user_file.add_item(InventoryItem::Weapon {
+                name: "Stick of Thwacking".to_string(),
+                wtype: WeaponType::Stick,
+                damage: 5..=15,
+            });
+            user_file.remove_super_nanners(5);
+
+            CreateEmbed::new()
+                .title("Purchase Successful")
+                .description("You have purchased a Stick of Thwacking!")
+                .thumbnail("attachment://shop.jpeg")
+                .color(Colour::GOLD)
+                .field("Cost", "5:zap:", true)
+                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
+                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
+        }
+        4 => { // Excalibur (Sword)
+            if user_file.get_super_nanners() < 15 {
+                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
+                return;
+            }
+            user_file.add_item(InventoryItem::Weapon {
+                name: "Excalibur".to_string(),
+                wtype: WeaponType::Sword,
+                damage: 50..=100,
+            });
+            user_file.remove_super_nanners(15);
+
+            CreateEmbed::new()
+                .title("Purchase Successful")
+                .description("You have purchased Excalibur!")
+                .thumbnail("attachment://shop.jpeg")
+                .color(Colour::GOLD)
+                .field("Cost", "15:zap:", true)
+                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
+                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
+        }
+        5 => { // Spell Tome - Fireball 25-40hp
             if user_file.get_super_nanners() < 5 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
@@ -77,7 +119,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
-        3 => { // Spell Tome - Mighty Winds 5-25hp
+        6 => { // Spell Tome - Mighty Winds 5-25hp
             if user_file.get_super_nanners() < 3 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
@@ -94,7 +136,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
-        5 => { // Healing Potion - 25hp
+        7 => { // Healing Potion - 25hp
             if user_file.get_super_nanners() < 2 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
@@ -111,7 +153,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
-        6 => { // Healing Potion - 15hp
+        8 => { // Healing Potion - 15hp
             if user_file.get_super_nanners() < 1 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
@@ -125,6 +167,27 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
                 .field("Cost", "1:zap:", true)
+                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
+                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
+        }
+        27 => { // special weapon - The Throngler for 1:zap:
+            if user_file.get_super_nanners() < 1 {
+                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
+                return;
+            }
+            user_file.add_item(InventoryItem::Weapon {
+                name: "The Throngler".to_string(),
+                wtype: WeaponType::Sword,
+                damage: 25..=30,
+            });
+            user_file.remove_super_nanners(15);
+
+            CreateEmbed::new()
+                .title("Purchase Successful")
+                .description("You have purchased The Throngler!")
+                .thumbnail("attachment://shop.jpeg")
+                .color(Colour::GOLD)
+                .field("Cost", "15:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }

@@ -1,0 +1,150 @@
+{
+  "required_super_drill_tier": 2,
+  "sludge_worth": 50000,
+  "super_nanner_chance": 10,
+  "creatures": [
+    {
+      "name": "Sludge Dragon",
+      "health": {
+        "start": 100000,
+        "end": 2000000
+      },
+      "damage": {
+        "start": 2000,
+        "end": 5000
+      },
+      "reward_scaling": true,
+      "thumbnail": "sludge_dragon.jpeg",
+      "drops": {
+        "sludge": {
+          "start": 2000000,
+          "end": 6000000
+        },
+        "super_nanners": {
+          "start": 20,
+          "end": 500
+        },
+        "items": [
+          {
+            "HealingPotion": {
+              "health": 10000000
+            }
+          },
+          {
+            "SpellTome": {
+              "name": "Dragon Dildo",
+              "damage": {
+                "start": 1000,
+                "end": 2000
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sludge Grand Wizard",
+      "health": {
+        "start": 5000,
+        "end": 10000
+      },
+      "damage": {
+        "start": 10,
+        "end": 25
+      },
+      "reward_scaling": true,
+      "thumbnail": "sludge_wizard.png",
+      "drops": {
+        "sludge": {
+          "start": 20,
+          "end": 60
+        },
+        "super_nanners": {
+          "start": 1,
+          "end": 2
+        },
+        "items": [
+          {
+            "HealingPotion": {
+              "health": 10
+            }
+          },
+          {
+            "SpellTome": {
+              "name": "Toxic Wave",
+              "damage": {
+                "start": 10,
+                "end": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gooning Redditor",
+      "health": {
+        "start": 5000000,
+        "end": 10000000
+      },
+      "damage": {
+        "start": 100,
+        "end": 200
+      },
+      "reward_scaling": true,
+      "thumbnail": "sludge_wizard.png",
+      "drops": {
+        "sludge": {
+          "start": 20,
+          "end": 60
+        },
+        "super_nanners": {
+          "start": 1,
+          "end": 2
+        },
+        "items": [
+          {
+            "HealingPotion": {
+              "health": 100000
+            }
+          },
+          {
+            "SpellTome": {
+              "name": "Goon",
+              "damage": {
+                "start": 100000,
+                "end": 2000000
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "drop_table": {
+    "sludge": {
+      "start": 1000,
+      "end": 2000
+    },
+    "super_nanners": {
+      "start": 15,
+      "end": 20
+    },
+    "items": [
+      {
+        "HealingPotion": {
+          "health": 500
+        }
+      },
+      {
+        "SpellTome": {
+          "name": "Mog",
+          "damage": {
+            "start": 50000,
+            "end": 10000000
+          }
+        }
+      }
+    ]
+  }
+}

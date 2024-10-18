@@ -46,6 +46,7 @@ impl UserValues {
 
                 inventory: Inventory {
                     items: Vec::new(),
+                    equiped: None,
                 }
             }
         }
@@ -299,6 +300,28 @@ impl UserValues {
     pub fn remove_item_index(&mut self, index: usize) {
         self.reload();
         self.file.inventory.items.remove(index);
+        self.update();
+    }
+
+    pub fn get_equiped(&mut self) -> Option<InventoryItem> {
+        self.reload();
+        if let Some(eqid) = self.file.inventory.equiped {
+            Some(self.file.inventory.items.get(eqid as usize).unwrap().clone())
+        } else {
+            None
+        }
+    }
+
+    pub fn equip_item(&mut self, slot: u32) -> bool {
+        self.reload();
+        let success = self.file.inventory.equip(slot);
+        self.update();
+        success
+    }
+
+    pub fn unequip_item(&mut self) {
+        self.reload();
+        self.file.inventory.equiped = None;
         self.update();
     }
 

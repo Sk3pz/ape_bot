@@ -32,9 +32,18 @@ impl MineBattle {
         }
     }
 
-    pub fn attack(&mut self) -> u32 {
-        // calculate damage between 0 and 25 hp
-        let damage = thread_rng().gen_range(10..25);
+    pub fn attack(&mut self, equipped: Option<InventoryItem>) -> u32 {
+
+        // calculate damage
+        let damage = if let Some(item) = equipped {
+            match item {
+                InventoryItem::Weapon { damage, .. } => thread_rng().gen_range(damage),
+                _ => thread_rng().gen_range(0..=10)
+            }
+        } else {
+            thread_rng().gen_range(0..=10)
+        };
+
         if damage > self.enemy_health {
             self.enemy_health = 0;
             return damage;
@@ -62,9 +71,9 @@ impl MineBattle {
     pub fn heal_player(&mut self, amt: u32) {
         // heal the player for 25 hp
         self.player_health += amt;
-        if self.player_health > 100 {
-            self.player_health = 100;
-        }
+        // if self.player_health > 100 {
+        //     self.player_health = 100;
+        // }
     }
 
     pub fn use_item(&mut self, item: InventoryItem, user: UserId) -> (bool, (CreateEmbed, bool)) {
@@ -84,14 +93,24 @@ impl MineBattle {
 
                 if damage > self.enemy_health {
                     self.enemy_health = 0;
-                    return (used, self.handle_win(user, format!("You have defeated the {} using your {} Tome.", self.enemy.name, name)));
+                    return if name.as_str() == "Mog"
+                    { (used, self.handle_win(user, format!("You have mogged on the {} so hard he died", self.enemy.name))) }
+                    else { (used, self.handle_win(user, format!("You have defeated the {} using your {} Tome.", self.enemy.name, name))) };
                 }
                 self.enemy_health -= damage;
 
                 let boss_attack = self.enemy_turn();
 
-                (used, (self.craft_embed(format!("You used your {} Tome and dealt {} damage! The {} attacked you for {} damage!",
-                                                 name, damage, self.enemy.name, boss_attack)), false))
+                if name.as_str() == "Mog" {
+                    (used, (self.craft_embed(format!("You Mogged and dealt {} damage! The {} attacked you for {} damage!",
+                                                     damage, self.enemy.name, boss_attack)), false))
+                } else {
+                    (used, (self.craft_embed(format!("You used your {} Tome and dealt {} damage! The {} attacked you for {} damage!",
+                                                     name, damage, self.enemy.name, boss_attack)), false))
+                }
+            }
+            InventoryItem::Weapon { .. } => {
+                (false, (self.craft_embed("You must equip a weapon to use it! (`/equip <slot>` and then it will be used when you type `attack`)".to_string()), false))
             }
             _ => { (false, (self.craft_embed("You can not use that item here!".to_string()), false)) }
         }
@@ -193,7 +212,7 @@ impl MineBattle {
             user_file.remove_bananas(cost);
         }
 
-        return (CreateEmbed::new()
+        (CreateEmbed::new()
                     .title("Defeat!")
                     .description(format!("The {} defeated you and has stolen some bananas!", self.enemy.name))
                     .thumbnail(format!("attachment://{}", self.thumbnail))
@@ -201,7 +220,7 @@ impl MineBattle {
                     .color(Colour::RED)
                     .timestamp(Timestamp::now())
                     .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©")),
-                true);
+                true)
     }
 
     pub fn handle_message(&mut self, msg: &Message) -> (CreateEmbed, bool) {
@@ -211,7 +230,11 @@ impl MineBattle {
 
         match first {
             "attack" => {
-                let attack = self.attack();
+                let mut user_file = UserValues::get(&msg.author.id);
+
+                let equipped = user_file.get_equiped();
+
+                let attack = self.attack(equipped.clone());
 
                 if self.enemy_health == 0 {
                     return self.handle_win(msg.author.id, format!("You have defeated the {}!", self.enemy.name));
@@ -223,11 +246,11 @@ impl MineBattle {
                     return self.handle_player_death(msg.author.id);
                 }
 
-                (self.craft_embed(format!("You attacked the {} for {} damage, and it attacked you for {} damage!",
-                                          self.enemy.name, attack, boss_attack)), false)
+                (self.craft_embed(format!("You attacked the {}{} for {} damage, and it attacked you for {} damage!",
+                                          self.enemy.name, if let Some(item) = equipped { format!(" with your {}", item) } else { "fists".to_string() }, attack, boss_attack)), false)
             }
             "item" => {
-                // get the item the user is trying to use as a u8
+                // get the item the user is trying to use as u8
                 let Ok(slot) = split.next().unwrap().parse::<u8>() else {
                     return (self.craft_embed("**INVALID ITEM** To use an item, type `item #`, where # is the slot in your inventory (see `/inventory`)"
                         .to_string()), false)
@@ -250,6 +273,11 @@ impl MineBattle {
                 // remove the item
                 if used {
                     user_file.remove_item_index(slot as usize);
+                }
+
+                // check if user needs to die
+                if self.player_health == 0 {
+                    return self.handle_player_death(msg.author.id);
                 }
 
                 data
@@ -287,7 +315,7 @@ impl MineBattle {
                 (self.craft_embed(format!("You failed to flee, and the sludge monster attacked you for {} damage!", boss_attack)), false)
             }
             "surrender" => {
-                return self.handle_player_death(msg.author.id);
+                self.handle_player_death(msg.author.id)
             }
             _ => {
                 (self.craft_embed("Me no understand!".to_string()), false)

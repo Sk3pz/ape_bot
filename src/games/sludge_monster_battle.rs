@@ -90,14 +90,14 @@ impl SludgeMonsterBattle {
             user_file.remove_bananas(cost);
         }
 
-        return (CreateEmbed::new()
+        (CreateEmbed::new()
                     .title("Defeat!")
                     .description("The sludge monster defeated you and has stolen some bananas!")
                     .field("Lost Bananas:", format!("{}:banana:", cost), false)
                     .color(Colour::RED)
                     .timestamp(Timestamp::now())
                     .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©")),
-                true);
+                true)
     }
 
     pub fn handle_message(&mut self, msg: &Message) -> (CreateEmbed, bool) {
@@ -174,7 +174,7 @@ impl SludgeMonsterBattle {
                 (self.craft_embed(format!("You failed to flee, and the sludge monster attacked you for {} damage!", boss_attack)), false)
             }
             "surrender" => {
-                return self.handle_player_death(msg.author.id);
+                self.handle_player_death(msg.author.id)
             }
             _ => {
                 (self.craft_embed("Me no understand!".to_string()), false)

@@ -10,9 +10,28 @@ pub const MAX_INVENTORY_SIZE: u8 = 16;
 #[derive(Serialize, Deserialize)]
 pub struct Inventory {
     pub items: Vec<item::InventoryItem>,
+    pub equiped: Option<u32>,
 }
 
 impl Inventory {
+
+    pub fn equip(&mut self, index: u32) -> bool {
+        // ensure the item is a weapon
+        if let item::InventoryItem::Weapon { .. } = self.items.get(index as usize).unwrap() {
+            self.equiped = Some(index);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn get_equipped(&self) -> Option<&item::InventoryItem> {
+        if let Some(index) = self.equiped {
+            self.items.get(index as usize)
+        } else {
+            None
+        }
+    }
 
     pub fn get_minions(&self) -> Vec<minion::Minion> {
         let mut minions = Vec::new();
@@ -48,7 +67,7 @@ impl Clone for Inventory {
         }
 
         Self {
-            items
+            items, equiped: self.equiped.clone(),
         }
     }
 }

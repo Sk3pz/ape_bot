@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 use std::fmt::Display;
-use rand::random;
+use rand::{random, Rng};
 use serenity::all::{UserId};
 use crate::games::blackjack::BlackJack;
 use crate::games::mine_battle::MineBattle;
+use crate::games::pvp::PvPArena;
 use crate::games::sludge_monster_battle::SludgeMonsterBattle;
 use crate::games::texas_holdem::TexasHoldem;
 
@@ -11,6 +12,7 @@ pub mod blackjack;
 pub mod texas_holdem;
 pub mod sludge_monster_battle;
 pub mod mine_battle;
+pub mod pvp;
 
 #[derive(Clone, Copy, Debug)]
 pub enum CardType {
@@ -397,12 +399,40 @@ impl Deck {
     }
 }
 
+pub enum D20 {
+    SuperBad, // 1
+    Bad, // 2-5
+    LessBad, // 6-9
+    Neutral, // 10-11
+    LessGood, // 12-15
+    Good, // 16-19
+    SuperGood, // 20
+}
+
+impl D20 {
+    pub fn roll() -> Self {
+        let roll = rand::thread_rng().gen_range(1..21);
+        match roll {
+            1 => D20::SuperBad,
+            2..=5 => D20::Bad,
+            6..=9 => D20::LessBad,
+            10..=11 => D20::Neutral,
+            12..=15 => D20::LessGood,
+            16..=19 => D20::Good,
+            20 => D20::SuperGood,
+            _ => unreachable!(),
+        }
+    }
+}
+
 pub enum Games {
     BlackJack(BlackJack),
     TexasHoldem(TexasHoldem),
 
     SludgeMonsterBattle(SludgeMonsterBattle),
     MineBattle(MineBattle),
+
+    PvP(PvPArena),
 }
 
 pub struct GameHandler {
@@ -447,6 +477,18 @@ impl GamesManager {
         self.games.get_mut(&code)
     }
 
+    pub fn get_join_required_info(&mut self, code: GameCode) -> Option<usize> {
+        if let Some(g) = self.games.get_mut(&code) {
+            match &g.game {
+                Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => None,
+                Games::TexasHoldem(th) => todo!(),
+                Games::PvP(arena) => Some(arena.stake as usize),
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn end_game(&mut self, code: GameCode) {
         self.games.remove(&code);
     }
@@ -454,13 +496,13 @@ impl GamesManager {
     pub fn generate_game_code(&self) -> GameCode {
         // 5 character game code
         let mut code = random::<GameCode>() % 100000;
-        while self.code_exists(code) {
+        while self.code_exists(&code) {
             code = random::<GameCode>() % 100000;
         }
         code
     }
 
-    pub fn code_exists(&self, code: GameCode) -> bool {
+    pub fn code_exists(&self, code: &GameCode) -> bool {
         self.games.contains_key(&code)
     }
 
@@ -508,13 +550,43 @@ impl GamesManager {
         match &game.game {
             Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => false,
             Games::TexasHoldem(th) => th.can_join(),
+            Games::PvP(arena) => arena.can_join(),
+        }
+    }
+
+    pub fn add_player(&mut self, game_code: GameCode, user: UserId) -> bool {
+        let mut game = self.games.get_mut(&game_code).unwrap();
+        game.add_player(user.clone());
+        match &mut game.game {
+            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => false,
+            Games::TexasHoldem(ref mut th) => todo!(),
+            Games::PvP(arena) => if arena.can_join() {
+                arena.add_player(user);
+                true
+            } else {
+                false
+            },
+        }
+    }
+
+    pub fn remove_player_from_game(&mut self, game_code: GameCode, player: UserId) {
+        let game = self.games.get_mut(&game_code).unwrap();
+        // remove from game.players
+        if let Some(index) = game.players.iter().position(|x| *x == player) {
+            game.players.remove(index);
+        }
+
+        match &mut game.game {
+            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => (),
+            Games::TexasHoldem(th) => todo!(),
+            Games::PvP(arena) => arena.remove_player(player),
         }
     }
 
     pub fn get_hand(&self, game_code: &GameCode, player: UserId) -> Option<Vec<Card>> {
         let game = self.games.get(game_code).unwrap();
         match &game.game {
-            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => None,
+            Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) | Games::PvP(_) => None,
             Games::TexasHoldem(th) => th.get_hand(player),
         }
     }
