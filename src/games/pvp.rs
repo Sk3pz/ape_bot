@@ -372,10 +372,12 @@ impl PvPArena {
 
                 // if items are disabled, return
                 if !self.enable_items {
-                    if self.turn > 0 {
-                        self.turn -= 1;
-                    } else {
-                        self.turn = (self.players.len() - 1) as u16;
+                    if is_turn {
+                        if self.turn > 0 {
+                            self.turn -= 1;
+                        } else {
+                            self.turn = (self.players.len() - 1) as u16;
+                        }
                     }
                     return Some((CreateEmbed::default()
                                      .title("You can't do that here!")
@@ -388,10 +390,12 @@ impl PvPArena {
 
                 // get the item number
                 let Ok(slot) = split.next().unwrap().parse::<u8>() else {
-                    if self.turn > 0 {
-                        self.turn -= 1;
-                    } else {
-                        self.turn = (self.players.len() - 1) as u16;
+                    if is_turn {
+                        if self.turn > 0 {
+                            self.turn -= 1;
+                        } else {
+                            self.turn = (self.players.len() - 1) as u16;
+                        }
                     }
                     return Some((CreateEmbed::new()
                                      .title("Invalid Item!")
@@ -407,10 +411,12 @@ impl PvPArena {
                 let slot = slot - 1;
                 
                 let Some(item) = items.get(slot as usize) else {
-                    if self.turn > 0 {
-                        self.turn -= 1;
-                    } else {
-                        self.turn = (self.players.len() - 1) as u16;
+                    if is_turn {
+                        if self.turn > 0 {
+                            self.turn -= 1;
+                        } else {
+                            self.turn = (self.players.len() - 1) as u16;
+                        }
                     }
                     return Some((CreateEmbed::default()
                                      .title("Invalid Item!")
@@ -426,7 +432,7 @@ impl PvPArena {
                         // apply the healing to the user
 
                         // it will not count as their turn
-                        if !is_turn {
+                        if is_turn {
                             if self.turn > 0 {
                                 self.turn -= 1;
                             } else {
@@ -560,10 +566,12 @@ impl PvPArena {
                                  false, None))
                     }
                     _ => {
-                        if self.turn > 0 {
-                            self.turn -= 1;
-                        } else {
-                            self.turn = (self.players.len() - 1) as u16;
+                        if is_turn {
+                            if self.turn > 0 {
+                                self.turn -= 1;
+                            } else {
+                                self.turn = (self.players.len() - 1) as u16;
+                            }
                         }
                         Some((CreateEmbed::default()
                                          .title("Invalid Item!")
@@ -579,10 +587,12 @@ impl PvPArena {
                 // get the player names
                 let names = self.list_players(ctx);
 
-                if self.turn > 0 {
-                    self.turn -= 1;
-                } else {
-                    self.turn = (self.players.len() - 1) as u16;
+                if is_turn {
+                    if self.turn > 0 {
+                        self.turn -= 1;
+                    } else {
+                        self.turn = (self.players.len() - 1) as u16;
+                    }
                 }
 
                 Some((CreateEmbed::default()
@@ -593,8 +603,6 @@ impl PvPArena {
                       false, None))
             }
             "surrender" => {
-                hey!("handling surrender!");
-
                 // give all other users a portion of the stake
                 let stake = self.stake / self.players.len() as u64;
                 for player in &self.players {
@@ -605,8 +613,9 @@ impl PvPArena {
                 }
 
                 // check if there is less than 2 players and determine win
-                if self.players.len() < 3 { // this is a little cheaty lol
-                    return Some(self.handle_win(ctx, self.players[0].user.clone()));
+                if self.players.len() < 3 {
+                    let index = self.players.iter().position(|p| p.user != user).unwrap();
+                    return Some(self.handle_win(ctx, self.players[index].user.clone()));
                 }
 
                 Some((CreateEmbed::default()
@@ -618,10 +627,12 @@ impl PvPArena {
                       false, Some(user)))
             }
             _ => {
-                if self.turn > 0 {
-                    self.turn -= 1;
-                } else {
-                    self.turn = (self.players.len() - 1) as u16;
+                if is_turn {
+                    if self.turn > 0 {
+                        self.turn -= 1;
+                    } else {
+                        self.turn = (self.players.len() - 1) as u16;
+                    }
                 }
                 None
             }

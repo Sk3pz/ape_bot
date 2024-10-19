@@ -136,7 +136,24 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
-        7 => { // Healing Potion - 25hp
+        7 => { // Healing Potion - 10hp
+            if user_file.get_super_nanners() < 1 {
+                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
+                return;
+            }
+            user_file.add_item(InventoryItem::HealingPotion { health: 10 });
+            user_file.remove_super_nanners(1);
+
+            CreateEmbed::new()
+                .title("Purchase Successful")
+                .description("You have purchased a Healing Potion (10hp)!")
+                .thumbnail("attachment://shop.jpeg")
+                .color(Colour::GOLD)
+                .field("Cost", "1:zap:", true)
+                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
+                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
+        }
+        8 => { // Healing Potion - 25hp
             if user_file.get_super_nanners() < 2 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
@@ -150,23 +167,6 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
                 .field("Cost", "2:zap:", true)
-                .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
-                .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
-        }
-        8 => { // Healing Potion - 15hp
-            if user_file.get_super_nanners() < 1 {
-                command_response(ctx, &cmd, "You don't have enough super nanners!").await;
-                return;
-            }
-            user_file.add_item(InventoryItem::HealingPotion { health: 10 });
-            user_file.remove_super_nanners(2);
-
-            CreateEmbed::new()
-                .title("Purchase Successful")
-                .description("You have purchased a Healing Potion (10hp)!")
-                .thumbnail("attachment://shop.jpeg")
-                .color(Colour::GOLD)
-                .field("Cost", "1:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
