@@ -2,7 +2,6 @@ use std::ops::RangeInclusive;
 use rand::Rng;
 use serenity::all::{Colour, Context, CreateEmbed, Message, UserId};
 use serenity::builder::CreateEmbedFooter;
-use crate::{hey};
 use crate::inventory::item::InventoryItem;
 use crate::userfile::UserValues;
 
