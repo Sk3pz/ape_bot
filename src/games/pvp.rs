@@ -435,13 +435,16 @@ impl PvPArena {
                         }
 
                         // get the user from players (turn is already incremented)
-                        let playing = self.players.len();
-                        let current_player = &mut self.players[if self.turn == 0 { playing - 1 } else { (self.turn - 1) as usize }];
+                        let current_player_loc = self.players.iter().position(|p| p.user == user).unwrap_or(0);
+                        let current_player = &mut self.players[current_player_loc];
                         current_player.health += health;
                         if current_player.health > self.max_health {
                             current_player.health = self.max_health;
                         }
                         let current_player_name = current_player.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+
+                        // remove the item from the user's inventory
+                        user_file.remove_item_index(slot as usize);
 
                         if is_turn {
                             Some((CreateEmbed::default()
@@ -452,7 +455,7 @@ impl PvPArena {
                                       .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
                                   false, None))
                         } else {
-                            let next_user = &self.players[self.turn as usize];
+                            let next_user = &self.players[(self.turn) as usize];
                             let next_turn_name = next_user.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
                             let name = user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
@@ -460,7 +463,7 @@ impl PvPArena {
                                       .title(format!("{} has healed to {}hp!", name, health))
                                       .color(Colour::RED)
                                       .thumbnail("attachment://battle_monkey.jpeg")
-                                      .description(format!("It is {}'s to perform an action.\n  Health: {}", next_turn_name, next_user.health))
+                                      .description(format!("It is still {}'s to perform an action.\n  Health: {}", next_turn_name, next_user.health))
                                       .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
                                   false, None))
                         }
@@ -528,7 +531,8 @@ impl PvPArena {
                             target.health -= damage;
                         }
 
-                        
+                        // remove the item from the user's inventory
+                        user_file.remove_item_index(slot as usize);
 
                         if target.health == 0 {
                             return if last_2 {
@@ -613,7 +617,14 @@ impl PvPArena {
                           .footer(CreateEmbedFooter::new("You can type `attack`, `item`, or `surrender`")),
                       false, Some(user)))
             }
-            _ => { None }
+            _ => {
+                if self.turn > 0 {
+                    self.turn -= 1;
+                } else {
+                    self.turn = (self.players.len() - 1) as u16;
+                }
+                None
+            }
         };
 
         end
