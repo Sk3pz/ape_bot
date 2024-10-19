@@ -15,7 +15,8 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
     if inv.is_empty() {
         let embed = CreateEmbed::new()
             .title("Inventory")
-            .description(format!("{}Your inventory is empty!", if let Some(item) = equipped.clone() { format!("\nEquipped: {}", item) } else { "".to_string() }))
+            .description(format!("{}Your inventory is empty!",
+                                 if let Some(item) = equipped { format!("Equipped: {}\n", item.to_string()) } else { "".to_string() }))
             .color(Colour::GOLD)
             .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"));
 
