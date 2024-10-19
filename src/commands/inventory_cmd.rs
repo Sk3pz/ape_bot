@@ -10,12 +10,12 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
     let mut user_file = UserValues::get(&cmd.user.id);
 
     let inv = user_file.get_items();
-    let equipped = user_file.file.inventory.equiped;
+    let equipped = user_file.get_equiped();
 
     if inv.is_empty() {
         let embed = CreateEmbed::new()
             .title("Inventory")
-            .description("Your inventory is empty!")
+            .description(format!("{}Your inventory is empty!", if let Some(item) = equipped.clone() { format!("\nEquipped: {}", item) } else { "".to_string() }))
             .color(Colour::GOLD)
             .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"));
 
