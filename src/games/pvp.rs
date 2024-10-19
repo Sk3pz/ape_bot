@@ -104,6 +104,7 @@ impl PvPArena {
         }
     }
 
+    // todo: make list show health for all players
     pub fn list_players(&self, ctx: &Context) -> Vec<String> {
         // get the player names
         let mut names = Vec::new();
@@ -120,6 +121,7 @@ impl PvPArena {
         names
     }
 
+    // todo: add leave option for all players here
     pub fn handle_prestart_message(&mut self, ctx: &Context, msg: &Message) -> Option<(CreateEmbed, bool, Option<UserId>)> {
         let content = msg.content.as_str().to_lowercase();
         let mut split = content.split_whitespace();
