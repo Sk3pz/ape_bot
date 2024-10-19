@@ -5,20 +5,24 @@ pub mod super_drill;
 use serde::{Deserialize, Serialize};
 use crate::inventory::super_drill::SuperDrill;
 
-pub const MAX_INVENTORY_SIZE: u8 = 16;
+//pub const MAX_INVENTORY_SIZE: u8 = 16;
+pub const MAX_INVENTORY_SIZE: u8 = 64;
 
 #[derive(Serialize, Deserialize)]
 pub struct Inventory {
     pub items: Vec<item::InventoryItem>,
-    pub equiped: Option<u32>,
+    pub equiped: Option<item::InventoryItem>,
 }
 
 impl Inventory {
 
     pub fn equip(&mut self, index: u32) -> bool {
+        let item = self.items.get(index as usize).unwrap();
         // ensure the item is a weapon
-        if let item::InventoryItem::Weapon { .. } = self.items.get(index as usize).unwrap() {
-            self.equiped = Some(index);
+        if let item::InventoryItem::Weapon { .. } = item {
+            self.equiped = Some(item.clone());
+            // remove the item from the inventory
+            self.items.remove(index as usize);
             true
         } else {
             false
@@ -26,11 +30,20 @@ impl Inventory {
     }
 
     pub fn get_equipped(&self) -> Option<&item::InventoryItem> {
-        if let Some(index) = self.equiped {
-            self.items.get(index as usize)
+        if let Some(item) = &self.equiped {
+            Some(&item)
         } else {
             None
         }
+    }
+
+    pub fn unequip(&mut self) {
+        // add the item to the inventory
+        if let Some(item) = self.equiped.as_mut() {
+            self.items.push(item.clone());
+        }
+        // remove the equipped item
+        self.equiped = None;
     }
 
     pub fn get_minions(&self) -> Vec<minion::Minion> {

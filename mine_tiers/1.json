@@ -26,6 +26,16 @@
             "HealingPotion": {
               "health": 15
             }
+          },
+          {
+            "Weapon": {
+              "name": "Slime Covered Stick",
+              "wtype": "Stick",
+              "damage": {
+                "start": 5,
+                "end": 12
+              }
+            }
           }
         ]
       }
@@ -52,6 +62,16 @@
           "damage": {
             "start": 5,
             "end": 25
+          }
+        }
+      },
+      {
+        "Weapon": {
+          "name": "Pointy Stick",
+          "wtype": "Stick",
+          "damage": {
+            "start": 5,
+            "end": 12
           }
         }
       }

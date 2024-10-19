@@ -1,16 +1,17 @@
+use std::ops::RangeInclusive;
 use rand::Rng;
 use serenity::all::{Colour, Context, CreateEmbed, Message, UserId};
 use serenity::builder::CreateEmbedFooter;
-use crate::{hey, GAMES};
+use crate::{hey};
 use crate::inventory::item::InventoryItem;
 use crate::userfile::UserValues;
 
 pub enum PvPModFlag {
     NoItem,
     MaxPlayers(u64),
-    CustomStartHealth(u64),
-    CustomMaxHealth(u64),
-    DamageRange(u64, u64),
+    CustomStartHealth(u32),
+    CustomMaxHealth(u32),
+    DamageRange(u32, u32),
 }
 
 struct Player {
@@ -27,9 +28,9 @@ pub struct PvPArena {
 
     // modifiers
     max_players: u64,
-    max_health: u64,
-    base_health: u64,
-    damage_range: (u64, u64),
+    max_health: u32,
+    base_health: u32,
+    damage_range: RangeInclusive<u32>,
     enable_items: bool,
 
     total_players: u64,
@@ -42,7 +43,7 @@ impl PvPArena {
         let mut max_players = 2;
         let mut max_health = 100;
         let mut base_health = 100;
-        let mut damage_range: (u64, u64) = (0, 10);
+        let mut damage_range: RangeInclusive<u32> = 0..=10;
 
         for flag in flags {
             match flag {
@@ -50,7 +51,7 @@ impl PvPArena {
                 PvPModFlag::MaxPlayers(players) => max_players = players,
                 PvPModFlag::CustomStartHealth(health) => base_health = health,
                 PvPModFlag::CustomMaxHealth(health) => max_health = health,
-                PvPModFlag::DamageRange(min, max) => damage_range = (min, max),
+                PvPModFlag::DamageRange(min, max) => damage_range = min..=max,
             }
         }
 
@@ -120,7 +121,7 @@ impl PvPArena {
         names
     }
 
-    pub fn handle_prestart_message(&mut self, ctx: &Context, user: UserId, msg: &Message) -> Option<(CreateEmbed, bool, Option<UserId>)> {
+    pub fn handle_prestart_message(&mut self, ctx: &Context, msg: &Message) -> Option<(CreateEmbed, bool, Option<UserId>)> {
         let content = msg.content.as_str().to_lowercase();
         let mut split = content.split_whitespace();
         let first = split.next().unwrap();
@@ -168,7 +169,7 @@ impl PvPArena {
             // list all players in the game
             "list" => {
                 // get the player names
-                let mut names = self.list_players(ctx);
+                let names = self.list_players(ctx);
 
                 Some((CreateEmbed::default()
                           .title("Players in your arena")
@@ -188,13 +189,13 @@ impl PvPArena {
         }
     }
 
-    fn handle_win(&mut self, ctx: &Context, winnerId: UserId) -> (CreateEmbed, bool, Option<UserId>) {
-        let winner = winnerId.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+    fn handle_win(&mut self, ctx: &Context, winner_id: UserId) -> (CreateEmbed, bool, Option<UserId>) {
+        let winner = winner_id.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
         let pot = self.stake * self.total_players;
 
         // add the pot to the user
-        let mut userfile = UserValues::get(&winnerId);
+        let mut userfile = UserValues::get(&winner_id);
         userfile.add_bananas(pot);
 
         (CreateEmbed::default()
@@ -218,6 +219,8 @@ impl PvPArena {
         if is_turn {
             self.next_turn();
         }
+
+        let next_turn_name = self.players[self.turn as usize].user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()).clone();
 
         let end = match first {
             "attack" => {
@@ -271,14 +274,14 @@ impl PvPArena {
                     self.players.iter().find(|p| p.user != user).unwrap().user
                 };
 
-                let mut target = self.players.iter_mut().find(|p| p.user == target).unwrap();
+                let target = self.players.iter_mut().find(|p| p.user == target).unwrap();
 
                 // get the user's equipped item if they have one
                 let mut userfile = UserValues::get(&user);
 
                 if self.enable_items {
                     let item = userfile.get_equiped();
-                    if let Some(InventoryItem::Weapon { name, wtype, damage }) = item {
+                    if let Some(InventoryItem::Weapon { name, damage, .. }) = item {
 
                         // generate the damage
                         let damage = rand::thread_rng().gen_range(damage);
@@ -299,9 +302,9 @@ impl PvPArena {
                             } else {
                                 return Some((CreateEmbed::default()
                                                  .title(format!("{} has defeated {} using {}!",
-                                                            user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
-                                                            target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
-                                                 .description(format!("It is {}'s turn to perform an action.\n  Health: {}", target_name, self.players[self.turn as usize].health))
+                                                                user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                                target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
+                                                 .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                                                  .thumbnail("attachment://battle_monkey.jpeg")
                                                  .color(Colour::RED)
                                                  .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
@@ -309,14 +312,12 @@ impl PvPArena {
                             }
                         }
 
-                        let target = target.user;
-
                         let next_health = self.players[self.turn as usize].health;
 
                         return Some((CreateEmbed::default()
                                          .title(format!("{} has attacked {} for {} damage using {}!", user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
                                                         target_name, damage, name))
-                                         .description(format!("It is {}'s turn to perform an action.\n  Health: {}", target_name, next_health))
+                                         .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, next_health))
                                          .thumbnail("attachment://battle_monkey.jpeg")
                                          .color(Colour::RED)
                                          .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
@@ -325,7 +326,7 @@ impl PvPArena {
                 }
 
                 // generate the damage
-                let damage: u32 = rand::thread_rng().gen_range(0..=10);
+                let damage: u32 = rand::thread_rng().gen_range(self.damage_range.clone());
 
                 // apply the damage to the target and return
                 if damage > target.health {
@@ -335,46 +336,39 @@ impl PvPArena {
                 }
 
                 if target.health == 0 {
-                    if last_2 {
-                        return Some(self.handle_win(ctx, user));
+                    return if last_2 {
+                        Some(self.handle_win(ctx, user))
                     } else {
                         let target_name = target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
                         let target = target.user;
 
-                        return Some((CreateEmbed::default()
-                                         .title(format!("{} has defeated {}!",
-                                                        user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
-                                                        target_name))
-                                         .description(format!("It is {}'s turn to perform an action.\n  Health: {}", target_name, self.players[self.turn as usize].health))
-                                         .thumbnail("attachment://battle_monkey.jpeg")
-                                         .color(Colour::RED)
-                                         .footer(CreateEmbedFooter::new("You can type `attack <@player>`, `item #`, `list` or `surrender`")),
-                                     false, Some(target)));
+
+                        Some((CreateEmbed::default()
+                                  .title(format!("{} has defeated {}!",
+                                                 user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                 target_name))
+                                  .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
+                                  .thumbnail("attachment://battle_monkey.jpeg")
+                                  .color(Colour::RED)
+                                  .footer(CreateEmbedFooter::new("You can type `attack <@player>`, `item #`, `list` or `surrender`")),
+                              false, Some(target)))
                     }
                 }
 
+                
                 let target_name = target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
                 Some((CreateEmbed::default()
                                  .title(format!("{} has attacked {} for {} damage!", user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
                                                 target_name, damage))
-                          .description(format!("It is {}'s turn to perform an action.\n  Health: {}", target_name, self.players[self.turn as usize].health))
+                          .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                           .thumbnail("attachment://battle_monkey.jpeg")
                           .color(Colour::RED)
                           .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
                              false, None))
             }
             "item" => { // use an item
-                // ensure it is the user's turn
-                if !is_turn {
-
-                    return Some((CreateEmbed::default()
-                                     .title("It is not your turn.")
-                                     .color(Colour::RED)
-                                     .thumbnail("attachment://battle_monkey.jpeg")
-                                     .description("Wait for your turn to attack."),
-                                 false, None));
-                }
+                // users can use healing potions on their turns
 
                 // if items are disabled, return
                 if !self.enable_items {
@@ -408,6 +402,9 @@ impl PvPArena {
                 // get the item
                 let mut user_file = UserValues::get(&msg.author.id);
                 let items = user_file.get_items();
+
+                // 1 index slot
+                let slot = slot - 1;
                 
                 let Some(item) = items.get(slot as usize) else {
                     if self.turn > 0 {
@@ -423,19 +420,62 @@ impl PvPArena {
                                      .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
                                  false, None))
                 };
-                
+
                 match item {
                     InventoryItem::HealingPotion { health } => {
                         // apply the healing to the user
-                        Some((CreateEmbed::default()
-                                  .title("You have healed to {}hp!")
-                                  .color(Colour::RED)
-                                  .thumbnail("attachment://battle_monkey.jpeg")
-                                  .description(format!("It is {}'s turn to perform an action.\n  Health: {}", user, self.players[self.turn as usize].health))
-                                  .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
-                              false, None))
+
+                        // it will not count as their turn
+                        if !is_turn {
+                            if self.turn > 0 {
+                                self.turn -= 1;
+                            } else {
+                                self.turn = (self.players.len() - 1) as u16;
+                            }
+                        }
+
+                        // get the user from players (turn is already incremented)
+                        let playing = self.players.len();
+                        let current_player = &mut self.players[if self.turn == 0 { playing - 1 } else { (self.turn - 1) as usize }];
+                        current_player.health += health;
+                        if current_player.health > self.max_health {
+                            current_player.health = self.max_health;
+                        }
+                        let current_player_name = current_player.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+
+                        if is_turn {
+                            Some((CreateEmbed::default()
+                                      .title(format!("{} has healed to {}hp!", current_player_name, health))
+                                      .color(Colour::RED)
+                                      .thumbnail("attachment://battle_monkey.jpeg")
+                                      .description(format!("It is still your turn to perform an action.\n  Health: {}", current_player.health))
+                                      .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
+                                  false, None))
+                        } else {
+                            let next_user = &self.players[self.turn as usize];
+                            let next_turn_name = next_user.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                            let name = user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+
+                            Some((CreateEmbed::default()
+                                      .title(format!("{} has healed to {}hp!", name, health))
+                                      .color(Colour::RED)
+                                      .thumbnail("attachment://battle_monkey.jpeg")
+                                      .description(format!("It is {}'s to perform an action.\n  Health: {}", next_turn_name, next_user.health))
+                                      .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
+                                  false, None))
+                        }
                     }
                     InventoryItem::SpellTome { name, damage } => {
+                        // users can not use spell tomes on their turns
+                        if !is_turn {
+                            return Some((CreateEmbed::default()
+                                             .title("It is not your turn.")
+                                             .color(Colour::RED)
+                                             .thumbnail("attachment://battle_monkey.jpeg")
+                                             .description("Wait for your turn to attack."),
+                                         false, None));
+                        }
+
                         // if player count is more than 2, user must specify which player to attack
                         let target = if self.players.len() > 2 {
                             // check if the msg contains a mention
@@ -476,8 +516,7 @@ impl PvPArena {
                             self.players.iter().find(|p| p.user != user).unwrap().user
                         };
 
-                        let mut target = self.players.iter_mut().find(|p| p.user == target).unwrap();
-                        let target_name = target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                        let target = self.players.iter_mut().find(|p| p.user == target).unwrap();
 
                         // apply the damage to the target and return
 
@@ -489,26 +528,28 @@ impl PvPArena {
                             target.health -= damage;
                         }
 
+                        
+
                         if target.health == 0 {
-                            if last_2 {
-                                return Some(self.handle_win(ctx, user));
+                            return if last_2 {
+                                Some(self.handle_win(ctx, user))
                             } else {
-                                return Some((CreateEmbed::default()
-                                                 .title(format!("{} has defeated {} using {} Tome!",
-                                                                user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
-                                                                target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
-                                                 .description(format!("It is {}'s turn to perform an action.\n  Health: {}", target_name, self.players[self.turn as usize].health))
-                                                 .thumbnail("attachment://battle_monkey.jpeg")
-                                                 .color(Colour::RED)
-                                                 .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
-                                             false, None));
+                                Some((CreateEmbed::default()
+                                          .title(format!("{} has defeated {} using {} Tome!",
+                                                         user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                         target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
+                                          .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
+                                          .thumbnail("attachment://battle_monkey.jpeg")
+                                          .color(Colour::RED)
+                                          .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
+                                      false, None))
                             }
                         }
 
                         Some((CreateEmbed::default()
                                      .title(format!("{} has attacked {} for {} damage using {} Tome!", user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
                                                     target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), damage, name))
-                                     .description(format!("It is {}'s turn to perform an action.\n  Health: {}", target_name, self.players[self.turn as usize].health))
+                                     .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                                      .thumbnail("attachment://battle_monkey.jpeg")
                                      .color(Colour::RED)
                                      .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
@@ -532,7 +573,7 @@ impl PvPArena {
             }
             "list" => {
                 // get the player names
-                let mut names = self.list_players(ctx);
+                let names = self.list_players(ctx);
 
                 if self.turn > 0 {
                     self.turn -= 1;
@@ -574,8 +615,6 @@ impl PvPArena {
             }
             _ => { None }
         };
-
-        // todo: win condition?
 
         end
     }

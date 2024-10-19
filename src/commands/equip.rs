@@ -16,7 +16,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
     let slot = (item - 1) as u32;
 
     // ensure the slot is valid
-    if slot < 0 || slot >= user_file.get_items().len() as u32 {
+    if slot >= user_file.get_items().len() as u32 {
         command_response(ctx, &cmd, "Invalid item slot!").await;
         return;
     }

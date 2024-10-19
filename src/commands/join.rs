@@ -1,6 +1,6 @@
 use serenity::all::{CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption, ResolvedOption, ResolvedValue, UserId};
 use crate::{command_response, command_response_loud, GAMES};
-use crate::games::{GameCode, Games};
+use crate::games::{GameCode};
 use crate::userfile::UserValues;
 
 pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
@@ -20,11 +20,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
         return;
     }
 
-    let stake = &GAMES.lock().unwrap().get_join_required_info(code as GameCode) else {
-        // error message
-        command_response(ctx, &command, "Invalid game code!").await;
-        return;
-    };
+    let stake = &GAMES.lock().unwrap().get_join_required_info(code as GameCode);
 
     let mut user_values = UserValues::get(user);
 

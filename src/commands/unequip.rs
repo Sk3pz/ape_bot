@@ -1,4 +1,4 @@
-use serenity::all::{CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption};
+use serenity::all::{CommandInteraction, Context, CreateCommand};
 use crate::command_response;
 use crate::userfile::UserValues;
 

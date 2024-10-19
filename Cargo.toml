@@ -1,6 +1,6 @@
 [package]
 name = "ape_bot_v2"
-version = "0.10.0"
+version = "0.10.1"
 edition = "2021"
 authors = ["Eric (Skepz) <skepz.dev@gmail.com>"]
 

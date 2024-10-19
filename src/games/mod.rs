@@ -481,7 +481,7 @@ impl GamesManager {
         if let Some(g) = self.games.get_mut(&code) {
             match &g.game {
                 Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => None,
-                Games::TexasHoldem(th) => todo!(),
+                Games::TexasHoldem(_) => todo!(),
                 Games::PvP(arena) => Some(arena.stake as usize),
             }
         } else {
@@ -555,11 +555,11 @@ impl GamesManager {
     }
 
     pub fn add_player(&mut self, game_code: GameCode, user: UserId) -> bool {
-        let mut game = self.games.get_mut(&game_code).unwrap();
+        let game = self.games.get_mut(&game_code).unwrap();
         game.add_player(user.clone());
         match &mut game.game {
             Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => false,
-            Games::TexasHoldem(ref mut th) => todo!(),
+            Games::TexasHoldem(_) => todo!(),
             Games::PvP(arena) => if arena.can_join() {
                 arena.add_player(user);
                 true
@@ -578,7 +578,7 @@ impl GamesManager {
 
         match &mut game.game {
             Games::BlackJack(_) | Games::SludgeMonsterBattle(_) | Games::MineBattle(_) => (),
-            Games::TexasHoldem(th) => todo!(),
+            Games::TexasHoldem(_) => todo!(),
             Games::PvP(arena) => arena.remove_player(player),
         }
     }

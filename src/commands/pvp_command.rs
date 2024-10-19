@@ -21,8 +21,8 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
                 match *name {
                     "stake" => stake = *val as u64,
                     "max_players" => max_players = *val as u64,
-                    "base_health" => base_health = *val as u64,
-                    "max_health" => max_health = *val as u64,
+                    "base_health" => base_health = *val as u32,
+                    "max_health" => max_health = *val as u32,
                     _ => {}
                 }
             },
@@ -37,10 +37,10 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
         }
     }
 
-    if stake < 5 {
-        command_response(ctx, command, "You must bet at least 5 bananas").await;
-        return;
-    }
+    // if stake < 5 {
+    //     command_response(ctx, command, "You must bet at least 5 bananas").await;
+    //     return;
+    // }
 
     // check that the user has enough bananas
     let mut userfile = UserValues::get(user);

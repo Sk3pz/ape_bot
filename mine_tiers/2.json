@@ -31,6 +31,16 @@
             }
           },
           {
+            "Weapon": {
+              "name": "Blade of Slime",
+              "wtype": "Sword",
+              "damage": {
+                "start": 10,
+                "end": 20
+              }
+            }
+          },
+          {
             "SpellTome": {
               "name": "Toxic Wave",
               "damage": {
@@ -67,6 +77,16 @@
           {
             "HealingPotion": {
               "health": 10
+            }
+          },
+          {
+            "Weapon": {
+              "name": "Wizard's Wand",
+              "wtype": "Stick",
+              "damage": {
+                "start": 15,
+                "end": 22
+              }
             }
           },
           {
@@ -151,6 +171,16 @@
           "damage": {
             "start": 20,
             "end": 150
+          }
+        }
+      },
+      {
+        "Weapon": {
+          "name": "Bow of Shooting",
+          "wtype": "Bow",
+          "damage": {
+            "start": 20,
+            "end": 25
           }
         }
       }

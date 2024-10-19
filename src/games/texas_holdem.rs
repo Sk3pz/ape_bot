@@ -78,11 +78,11 @@ impl TexasHoldem {
         self.players.iter().find(|p| p.user == user).map(|p| p.hand).map(|(c1, c2)| vec![c1, c2])
     }
 
-    pub fn determine_winner(&self) -> Vec<&Player> {
+    fn determine_winner(&self) -> Vec<&Player> {
         todo!()
     }
 
-    pub fn handle_message(&mut self, msg: &Message) -> (CreateEmbed, bool) {
+    pub fn handle_message(&mut self, _msg: &Message) -> (CreateEmbed, bool) {
         todo!()
     }
 }

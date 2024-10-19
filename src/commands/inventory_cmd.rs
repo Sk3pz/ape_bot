@@ -59,7 +59,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
 
     let embed = CreateEmbed::new()
         .title("Inventory")
-        .description(format!("Your items!\nEquipped: {}", if let Some(e) = equipped { (e + 1).to_string() } else { "None".to_string() }).as_str())
+        .description(format!("Your items!\nEquipped: {}", if let Some(item) = equipped { item.to_string() } else { "None".to_string() }))
         .color(Colour::GOLD)
         .thumbnail("attachment://backpack.jpeg")
         .fields(items)

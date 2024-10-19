@@ -305,8 +305,8 @@ impl UserValues {
 
     pub fn get_equiped(&mut self) -> Option<InventoryItem> {
         self.reload();
-        if let Some(eqid) = self.file.inventory.equiped {
-            Some(self.file.inventory.items.get(eqid as usize).unwrap().clone())
+        if let Some(item) = self.file.inventory.get_equipped() {
+            Some(item.clone())
         } else {
             None
         }
@@ -321,7 +321,7 @@ impl UserValues {
 
     pub fn unequip_item(&mut self) {
         self.reload();
-        self.file.inventory.equiped = None;
+        self.file.inventory.unequip();
         self.update();
     }
 

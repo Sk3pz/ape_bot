@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use rand::{Rng, thread_rng};
 use serenity::all::{ChannelId, Colour, CommandInteraction, CommandOptionType, Context, CreateAttachment, CreateCommand, CreateCommandOption, CreateEmbed, CreateEmbedFooter, CreateMessage, Http, Mentionable, ResolvedOption, ResolvedValue, Timestamp, UserId};
-use crate::{command_response, GAMES, hey, MINING, nay};
+use crate::{command_response, GAMES, MINING, nay};
 use crate::games::{GameHandler, Games};
 use crate::games::mine_battle::MineBattle;
 use crate::mine_data::Mine;

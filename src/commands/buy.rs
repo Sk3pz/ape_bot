@@ -82,7 +82,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }
         4 => { // Excalibur (Sword)
-            if user_file.get_super_nanners() < 15 {
+            if user_file.get_super_nanners() < 30 {
                 command_response(ctx, &cmd, "You don't have enough super nanners!").await;
                 return;
             }
@@ -91,14 +91,14 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, cmd: &CommandInt
                 wtype: WeaponType::Sword,
                 damage: 50..=100,
             });
-            user_file.remove_super_nanners(15);
+            user_file.remove_super_nanners(30);
 
             CreateEmbed::new()
                 .title("Purchase Successful")
                 .description("You have purchased Excalibur!")
                 .thumbnail("attachment://shop.jpeg")
                 .color(Colour::GOLD)
-                .field("Cost", "15:zap:", true)
+                .field("Cost", "30:zap:", true)
                 .field("Balance", format!("{}:zap:", user_file.get_super_nanners()), true)
                 .footer(CreateEmbedFooter::new("Brought to you by A.P.E. Inc©"))
         }

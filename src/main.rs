@@ -16,7 +16,6 @@ use crate::mine_data::Mine;
 //    health items are not working in pvp
 //    item index in pvp is 0 based, should be 1 based
 
-
 pub mod logging;
 pub mod userfile;
 pub mod guildfile;
@@ -283,7 +282,7 @@ impl EventHandler for Handler {
                                 } else {
                                     // game is not yet started but host messages are being processed
                                     if arena.is_host(user.id) {
-                                        if let Some((embed, end, user_to_remove)) = arena.handle_prestart_message(&ctx, user.id, &msg) {
+                                        if let Some((embed, end, user_to_remove)) = arena.handle_prestart_message(&ctx, &msg) {
                                             if end {
                                                 lock.end_game(code);
                                             }

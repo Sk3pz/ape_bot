@@ -18,7 +18,7 @@ pub async fn run(ctx: &Context, cmd: &CommandInteraction) {
             ("1: Super Drill", if user_file.has_super_drill() { "You already own this item!" } else { "15:zap:" }.to_string(), true), // todo: super drill upgrades
             ("2: Minion", "10:zap:".to_string(), true),
             ("3: Stick of Thwacking (Stick 5-15hp)", "5:zap:".to_string(), true),
-            ("4: Excalibur (Sword 80-100hp)", "15:zap:".to_string(), true),
+            ("4: Excalibur (Sword 50-100hp)", "30:zap:".to_string(), true),
             ("5: Spell Tome (Fireball 25-40hp)", "5:zap:".to_string(), true),
             ("6: Spell Tome (Mighty Winds 5-25hp)", "3:zap:".to_string(), true),
             ("7: Healing Potion (10hp)", "1:zap:".to_string(), true),
