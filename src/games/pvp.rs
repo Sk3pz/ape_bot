@@ -122,7 +122,7 @@ impl PvPArena {
     }
 
     // todo: add leave option for all players here
-    pub fn handle_prestart_message(&mut self, ctx: &Context, msg: &Message) -> Option<(CreateEmbed, bool, Option<UserId>)> {
+    pub async fn handle_prestart_message(&mut self, ctx: &Context, msg: &Message) -> Option<(CreateEmbed, bool, Option<UserId>)> {
         let content = msg.content.as_str().to_lowercase();
         let mut split = content.split_whitespace();
         let first = split.next().unwrap();
@@ -130,6 +130,11 @@ impl PvPArena {
         match first {
             // start the game (more than 1 player required)
             "start" => {
+                // ensure the player is the host
+                if !self.is_host(msg.author.id) {
+                    return None;
+                }
+
                 // ensure there are at least 2 players
                 if self.players.len() < 2 {
                     return Some((CreateEmbed::default()
@@ -141,8 +146,8 @@ impl PvPArena {
                 // start the game
                 self.started = true;
 
-                // get the current player's name based on turn
-                let user = self.players[self.turn as usize].user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                // get the current player's name based on turn TODO : BROKEN
+                let user = self.players[self.turn as usize].user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
                 Some((CreateEmbed::default()
                           .title("The arena has started!")
@@ -154,6 +159,11 @@ impl PvPArena {
             }
             // end the game
             "end" => {
+                // ensure the player is the host
+                if !self.is_host(msg.author.id) {
+                    return None;
+                }
+
                 // add back stake to users
                 for p in &self.players {
                     let mut userfile = UserValues::get(&p.user);
@@ -179,8 +189,16 @@ impl PvPArena {
                           .description(names.join("\n")),
                     false, None))
             }
+            "leave" => {
+                todo!()
+            }
             // kick a player from the game
             "kick" => {
+                // ensure the player is the host
+                if !self.is_host(msg.author.id) {
+                    return None;
+                }
+
                 // todo: ensure bananas get refunded to kicked user
 
                 self.total_players -= 1;
@@ -298,18 +316,18 @@ impl PvPArena {
 
                         // todo: check if target is dead and handle if required
                         if target.health == 0 {
-                            if last_2 {
-                                return Some(self.handle_win(ctx, user));
+                            return if last_2 {
+                                Some(self.handle_win(ctx, user))
                             } else {
-                                return Some((CreateEmbed::default()
-                                                 .title(format!("{} has defeated {} using {}!",
-                                                                user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
-                                                                target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
-                                                 .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
-                                                 .thumbnail("attachment://battle_monkey.jpeg")
-                                                 .color(Colour::RED)
-                                                 .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
-                                             false, None));
+                                Some((CreateEmbed::default()
+                                          .title(format!("{} has defeated {} using {}!",
+                                                         user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                         target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
+                                          .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
+                                          .thumbnail("attachment://battle_monkey.jpeg")
+                                          .color(Colour::RED)
+                                          .footer(CreateEmbedFooter::new("You can type `attack @player`, `item #`, `list` or `surrender`")),
+                                      false, None))
                             }
                         }
 

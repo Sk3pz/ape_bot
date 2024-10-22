@@ -89,7 +89,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
             ("Max Health", format!("{}", max_health), true),
             ("No Items", format!("{}", no_items), true),
         ])
-        .footer(CreateEmbedFooter::new("Type `start` to start, `end` to cancel the game, `list` to see players, or `kick` to kick a player"));
+        .footer(CreateEmbedFooter::new("Type `start` to start, `end` to cancel the game, `list` to see players, `leave` to leave, or `kick` to kick a player"));
 
     let msg = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
         .embed(embed)
