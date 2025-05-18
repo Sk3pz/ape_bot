@@ -8,7 +8,7 @@ authors = ["Eric (Skepz) <skepz.dev@gmail.com>"]
 better_term = "*"
 dotenv = "*"
 tokio = { version = "*", features = ["macros", "rt-multi-thread", "signal"]}
-rand = "*"
+rand = "0.8.5"
 lazy_static = "*"
 serde = "*"
 serde_json = "*"
