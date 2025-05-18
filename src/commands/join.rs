@@ -14,13 +14,13 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
     let code = code.clone() as usize;
 
     // ensure the code is valid
-    if !GAMES.lock().unwrap().code_exists(&(code as GameCode)) {
+    if !GAMES.lock().await.code_exists(&(code as GameCode)) {
         // error message
         command_response(ctx, &command, "Invalid game code!").await;
         return;
     }
 
-    let stake = &GAMES.lock().unwrap().get_join_required_info(code as GameCode);
+    let stake = &GAMES.lock().await.get_join_required_info(code as GameCode);
 
     let mut user_values = UserValues::get(user);
 
@@ -33,16 +33,16 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
     }
 
     // ensure the user is not already in a game
-    if GAMES.lock().unwrap().get_player_game(user).is_some() {
+    if GAMES.lock().await.get_player_game(user).is_some() {
         // error message
         command_response(ctx, &command, "You are already in a game!").await;
         return;
     }
 
     // check if the game is accepting players
-    let can_join = GAMES.lock().unwrap().can_join(&(code as GameCode));
+    let can_join = GAMES.lock().await.can_join(&(code as GameCode));
     if can_join {
-        let join_attempt = GAMES.lock().unwrap().add_player(code as GameCode, user.clone());
+        let join_attempt = GAMES.lock().await.add_player(code as GameCode, user.clone());
         if join_attempt {
             // remove the bananas from the user
             user_values.remove_bananas(stake.unwrap() as u64);

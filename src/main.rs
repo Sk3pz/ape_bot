@@ -1,12 +1,12 @@
 use std::env;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
 use better_term::{Color, Style};
 use lazy_static::lazy_static;
 use rand::{Rng, thread_rng};
 use serenity::all::{ActivityData, ChannelId, Colour, Command, CommandInteraction, Context, CreateAttachment, CreateCommand, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, GatewayIntents, Interaction, Member, Mentionable, Message, OnlineStatus, PartialGuild, Ready, ResumedEvent, Timestamp, UserId, VoiceState};
 use serenity::{async_trait, Client};
 use serenity::client::EventHandler;
+use tokio::sync::Mutex;
 use crate::commands::{admin, banana, blackjack_cmd, buy, collect_minions, discard, equip, fiftyfifty, help, inventory_cmd, join, mine, pvp_command, shop, slots, unequip};
 use crate::games::{GamesManager};
 use crate::mine_data::Mine;
@@ -55,7 +55,7 @@ pub async fn voice_minute_banana() {
         // sleep for 1 minute
         tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
 
-        let users_in_voice = USERS_IN_VOICE.lock().unwrap();
+        let users_in_voice = USERS_IN_VOICE.lock().await;
         for (id, time) in &*users_in_voice {
             let full_dur = Timestamp::now().signed_duration_since(time.fixed_offset()).num_seconds();
             let duration = full_dur.min(60) as f32 / 60.0;
@@ -104,9 +104,9 @@ pub fn gen_crate_code() -> String {
 
 pub async fn spawn_crate(ctx: &Context, channel: &ChannelId) {
     let code = gen_crate_code();
-    CRATE_CODE.lock().unwrap().clear();
-    CRATE_CODE.lock().unwrap().push_str(&code);
-    CRATE_ACTIVE.lock().unwrap().store(true, Ordering::SeqCst);
+    CRATE_CODE.lock().await.clear();
+    CRATE_CODE.lock().await.push_str(&code);
+    CRATE_ACTIVE.lock().await.store(true, Ordering::SeqCst);
 
     // send the embed
     let embed = CreateEmbed::new()
@@ -213,7 +213,7 @@ impl EventHandler for Handler {
                 (None, None)
             } else {
                 if !msg.content.is_empty() {
-                    let mut lock = GAMES.lock().expect("Failed to get games lock");
+                    let mut lock = GAMES.lock().await;
                     if let Some(code) = lock.get_player_game(&user.id) {
                         let game = lock.get_game(code).unwrap();
                         // todo: this captures all messages, needs rework to only capture messages that are direct game commands
@@ -266,7 +266,7 @@ impl EventHandler for Handler {
                             games::Games::PvP(ref mut arena) => {
                                 if arena.is_running() {
                                     // game is running handle messages
-                                    if let Some((embed, end, user_to_remove)) = arena.handle_message(&ctx, user.id, &msg) {
+                                    if let Some((embed, end, user_to_remove)) = arena.handle_message(&ctx, user.id, &msg).await {
                                         if end {
                                             lock.end_game(code);
                                         }
@@ -281,20 +281,16 @@ impl EventHandler for Handler {
                                     }
                                 } else {
                                     // game is not yet started but host messages are being processed
-                                    if arena.is_host(user.id) {
-                                        if let Some((embed, end, user_to_remove)) = arena.handle_prestart_message(&ctx, &msg) {
-                                            if end {
-                                                lock.end_game(code);
-                                            }
-
-                                            if let Some(usr) = user_to_remove {
-                                                lock.remove_player_from_game(code, usr);
-                                            }
-
-                                            (Some(embed), Some("./images/battle_monkey.jpeg".to_string()))
-                                        } else {
-                                            (None, None)
+                                    if let Some((embed, end, user_to_remove)) = arena.handle_prestart_message(&ctx, &msg).await {
+                                        if end {
+                                            lock.end_game(code);
                                         }
+
+                                        if let Some(usr) = user_to_remove {
+                                            lock.remove_player_from_game(code, usr);
+                                        }
+
+                                        (Some(embed), Some("./images/battle_monkey.jpeg".to_string()))
                                     } else {
                                         (None, None)
                                     }
@@ -328,14 +324,14 @@ impl EventHandler for Handler {
         }
 
         // check if there is an active crate and if so, did the user type the correct code?
-        if CRATE_ACTIVE.lock().unwrap().load(Ordering::SeqCst) {
-            let needed_code = CRATE_CODE.lock().unwrap().replace(" ", "");
+        if CRATE_ACTIVE.lock().await.load(Ordering::SeqCst) {
+            let needed_code = CRATE_CODE.lock().await.replace(" ", "");
             if msg.content.to_ascii_uppercase() == needed_code {
                 // second check for messages that are way too close
-                if !CRATE_ACTIVE.lock().unwrap().load(Ordering::SeqCst) {
+                if !CRATE_ACTIVE.lock().await.load(Ordering::SeqCst) {
                     return;
                 }
-                CRATE_ACTIVE.lock().unwrap().store(false, Ordering::SeqCst);
+                CRATE_ACTIVE.lock().await.store(false, Ordering::SeqCst);
                 let bananas = thread_rng().gen_range(10000..25000);
                 if let Err(e) = msg.reply(&ctx.http, format!("You've opened the crate and found {} bananas!", bananas)).await {
                     nay!("Failed to send crate reward message: {}", e);
@@ -455,7 +451,7 @@ impl EventHandler for Handler {
             }
             // USER JOINED
             // lock the users in voice vector
-            let mut users_in_voice = USERS_IN_VOICE.lock().unwrap();
+            let mut users_in_voice = USERS_IN_VOICE.lock().await;
             // push the user id if they are not already in
             if !users_in_voice.iter().any(|(id,_)| *id == new.user_id) {
                 users_in_voice.push((new.user_id, Timestamp::now()));
@@ -468,7 +464,7 @@ impl EventHandler for Handler {
             }
             // USER LEFT
             // lock the users in voice vector
-            let mut users_in_voice = USERS_IN_VOICE.lock().unwrap();
+            let mut users_in_voice = USERS_IN_VOICE.lock().await;
             // remove the user id
             if let Some(index) = users_in_voice.iter().position(|(id,_)| *id == new.user_id) {
                 let _ = users_in_voice.remove(index);

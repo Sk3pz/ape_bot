@@ -11,7 +11,7 @@ const BASE_MINE_TIME: u64 = 60;
 
 pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
     // remove the user mining
-    MINING.lock().unwrap().retain(|x| x != &sender);
+    MINING.lock().await.retain(|x| x != &sender);
 
     let mut user_file = UserValues::get(&sender);
 
@@ -53,7 +53,7 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
         }
 
         // add the game to GAMES
-        GAMES.lock().unwrap().insert(game);
+        GAMES.lock().await.insert(game);
 
         return;
     }
@@ -180,7 +180,7 @@ pub async fn finish_mine(http: Arc<Http>, channel: ChannelId, sender: UserId) {
 }
 
 pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, channel: &ChannelId, command: CommandInteraction, sender: &UserId) {
-    if MINING.lock().unwrap().contains(&sender) {
+    if MINING.lock().await.contains(&sender) {
         command_response(ctx, &command, "You are already mining!").await;
         return;
     }
@@ -189,7 +189,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, channel: &Channe
 
     let mut in_game = false;
     // if the user is playing a game
-    if let Some(_game) = GAMES.lock().unwrap().get_player_game_instance(sender) {
+    if let Some(_game) = GAMES.lock().await.get_player_game_instance(sender) {
         in_game = true;
     }
 
@@ -224,7 +224,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, channel: &Channe
     }
 
     // add user to mining
-    MINING.lock().unwrap().push(sender.clone());
+    MINING.lock().await.push(sender.clone());
 
     let ascension = user_file.get_ascension();
 

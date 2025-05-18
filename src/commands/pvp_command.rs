@@ -61,7 +61,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
     }
 
     // ensure the user is not already in a game
-    if GAMES.lock().unwrap().get_player_game(user).is_some() {
+    if GAMES.lock().await.get_player_game(user).is_some() {
         command_response(ctx, command, "You are already in a game!").await;
         return;
     }
@@ -73,7 +73,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context,
     let game = PvPArena::new(user.clone(), stake, flags);
 
     // add user to the game handler
-    let code = GAMES.lock().unwrap().insert(GameHandler::new(user.clone(), Games::PvP(game)));
+    let code = GAMES.lock().await.insert(GameHandler::new(user.clone(), Games::PvP(game)));
 
     // display the embed
     let embed = CreateEmbed::new()

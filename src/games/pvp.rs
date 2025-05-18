@@ -105,12 +105,12 @@ impl PvPArena {
     }
 
     // todo: make list show health for all players
-    pub fn list_players(&self, ctx: &Context) -> Vec<String> {
+    pub async fn list_players(&self, ctx: &Context) -> Vec<String> {
         // get the player names
         let mut names = Vec::new();
         for player in &self.players {
-            let user = player.user.to_user_cached(&ctx.cache);
-            let name = if let Some(usr) = user {
+            let user = player.user.to_user(&ctx.http).await;
+            let name = if let Ok(usr) = user {
                 usr.global_name.clone().unwrap()
             } else {
                 "unknown".to_string()
@@ -180,7 +180,7 @@ impl PvPArena {
             // list all players in the game
             "list" => {
                 // get the player names
-                let names = self.list_players(ctx);
+                let names = self.list_players(ctx).await;
 
                 Some((CreateEmbed::default()
                           .title("Players in your arena")
@@ -208,8 +208,8 @@ impl PvPArena {
         }
     }
 
-    fn handle_win(&mut self, ctx: &Context, winner_id: UserId) -> (CreateEmbed, bool, Option<UserId>) {
-        let winner = winner_id.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+    async fn handle_win(&mut self, ctx: &Context, winner_id: UserId) -> (CreateEmbed, bool, Option<UserId>) {
+        let winner = winner_id.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
         let pot = self.stake * self.total_players;
 
@@ -225,7 +225,7 @@ impl PvPArena {
                      true, None)
     }
 
-    pub fn handle_message(&mut self, ctx: &Context, user: UserId, msg: &Message) -> Option<(CreateEmbed, bool, Option<UserId>)> {
+    pub async fn handle_message(&mut self, ctx: &Context, user: UserId, msg: &Message) -> Option<(CreateEmbed, bool, Option<UserId>)> {
         let content = msg.content.as_str().to_lowercase();
         let mut split = content.split_whitespace();
         let first = split.next().unwrap();
@@ -239,7 +239,7 @@ impl PvPArena {
             self.next_turn();
         }
 
-        let next_turn_name = self.players[self.turn as usize].user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()).clone();
+        let next_turn_name = self.players[self.turn as usize].user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()).clone();
 
         let end = match first {
             "attack" => {
@@ -312,17 +312,17 @@ impl PvPArena {
                             target.health -= damage;
                         }
 
-                        let target_name = target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                        let target_name = target.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
                         // todo: check if target is dead and handle if required
                         if target.health == 0 {
                             return if last_2 {
-                                Some(self.handle_win(ctx, user))
+                                Some(self.handle_win(ctx, user).await)
                             } else {
                                 Some((CreateEmbed::default()
                                           .title(format!("{} has defeated {} using {}!",
-                                                         user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
-                                                         target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
+                                                         user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                         target.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
                                           .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                                           .thumbnail("attachment://battle_monkey.jpeg")
                                           .color(Colour::RED)
@@ -334,7 +334,7 @@ impl PvPArena {
                         let next_health = self.players[self.turn as usize].health;
 
                         return Some((CreateEmbed::default()
-                                         .title(format!("{} has attacked {} for {} damage using {}!", user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                         .title(format!("{} has attacked {} for {} damage using {}!", user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()),
                                                         target_name, damage, name))
                                          .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, next_health))
                                          .thumbnail("attachment://battle_monkey.jpeg")
@@ -356,15 +356,15 @@ impl PvPArena {
 
                 if target.health == 0 {
                     return if last_2 {
-                        Some(self.handle_win(ctx, user))
+                        Some(self.handle_win(ctx, user).await)
                     } else {
-                        let target_name = target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                        let target_name = target.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
                         let target = target.user;
 
 
                         Some((CreateEmbed::default()
                                   .title(format!("{} has defeated {}!",
-                                                 user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                 user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()),
                                                  target_name))
                                   .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                                   .thumbnail("attachment://battle_monkey.jpeg")
@@ -375,10 +375,10 @@ impl PvPArena {
                 }
 
                 
-                let target_name = target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                let target_name = target.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
                 Some((CreateEmbed::default()
-                                 .title(format!("{} has attacked {} for {} damage!", user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                 .title(format!("{} has attacked {} for {} damage!", user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()),
                                                 target_name, damage))
                           .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                           .thumbnail("attachment://battle_monkey.jpeg")
@@ -466,7 +466,7 @@ impl PvPArena {
                         if current_player.health > self.max_health {
                             current_player.health = self.max_health;
                         }
-                        let current_player_name = current_player.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                        let current_player_name = current_player.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
                         // remove the item from the user's inventory
                         user_file.remove_item_index(slot as usize);
@@ -481,8 +481,8 @@ impl PvPArena {
                                   false, None))
                         } else {
                             let next_user = &self.players[(self.turn) as usize];
-                            let next_turn_name = next_user.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
-                            let name = user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                            let next_turn_name = next_user.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
+                            let name = user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string());
 
                             Some((CreateEmbed::default()
                                       .title(format!("{} has healed to {}hp!", name, health))
@@ -561,12 +561,12 @@ impl PvPArena {
 
                         if target.health == 0 {
                             return if last_2 {
-                                Some(self.handle_win(ctx, user))
+                                Some(self.handle_win(ctx, user).await)
                             } else {
                                 Some((CreateEmbed::default()
                                           .title(format!("{} has defeated {} using {} Tome!",
-                                                         user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
-                                                         target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
+                                                         user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                         target.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()), name))
                                           .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                                           .thumbnail("attachment://battle_monkey.jpeg")
                                           .color(Colour::RED)
@@ -576,8 +576,8 @@ impl PvPArena {
                         }
 
                         Some((CreateEmbed::default()
-                                     .title(format!("{} has attacked {} for {} damage using {} Tome!", user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()),
-                                                    target.user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string()), damage, name))
+                                     .title(format!("{} has attacked {} for {} damage using {} Tome!", user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()),
+                                                    target.user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string()), damage, name))
                                      .description(format!("It is {}'s turn to perform an action.\n  Health: {}", next_turn_name, self.players[self.turn as usize].health))
                                      .thumbnail("attachment://battle_monkey.jpeg")
                                      .color(Colour::RED)
@@ -604,7 +604,7 @@ impl PvPArena {
             }
             "list" => {
                 // get the player names
-                let names = self.list_players(ctx);
+                let names = self.list_players(ctx).await;
 
                 if is_turn {
                     if self.turn > 0 {
@@ -634,11 +634,11 @@ impl PvPArena {
                 // check if there is less than 2 players and determine win
                 if self.players.len() < 3 {
                     let index = self.players.iter().position(|p| p.user != user).unwrap();
-                    return Some(self.handle_win(ctx, self.players[index].user.clone()));
+                    return Some(self.handle_win(ctx, self.players[index].user.clone()).await);
                 }
 
                 Some((CreateEmbed::default()
-                          .title(format!("{} surrendered!", user.to_user_cached(&ctx.cache).unwrap().clone().global_name.unwrap_or("unknown".to_string())))
+                          .title(format!("{} surrendered!", user.to_user(&ctx.http).await.unwrap().clone().global_name.unwrap_or("unknown".to_string())))
                           .color(Colour::RED)
                           .thumbnail("attachment://battle_monkey.jpeg")
                           .description("You have forfeited the game and have been removed from the arena.")

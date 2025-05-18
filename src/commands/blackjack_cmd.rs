@@ -12,7 +12,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
     };
 
     // if the user is mining
-    if MINING.lock().unwrap().contains(user) {
+    if MINING.lock().await.contains(user) {
         // error message
         command_response(ctx, command, "You are currently mining!").await;
         return;
@@ -53,7 +53,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
     }
 
     // if the user is already in a game
-    if GAMES.lock().unwrap().get_player_game(user).is_some() {
+    if GAMES.lock().await.get_player_game(user).is_some() {
         // error message
         command_response(ctx, command, "You are already in a game!").await;
         return;
@@ -115,7 +115,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
             nay!("Failed to send bj message: {}", e);
         }
 
-        GAMES.lock().unwrap().insert(GameHandler::new(user.clone(), Games::BlackJack(game)));
+        GAMES.lock().await.insert(GameHandler::new(user.clone(), Games::BlackJack(game)));
         return;
     }
 
@@ -141,7 +141,7 @@ pub async fn run(options: &[ResolvedOption<'_>], ctx: &Context, command: &Comman
         nay!("Failed to send bj message: {}", e);
     }
 
-    GAMES.lock().unwrap().insert(GameHandler::new(user.clone(), Games::BlackJack(game)));
+    GAMES.lock().await.insert(GameHandler::new(user.clone(), Games::BlackJack(game)));
 }
 
 pub fn register() -> CreateCommand {
